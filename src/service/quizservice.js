@@ -1,5 +1,5 @@
 import { db, storage } from 'Config'; // Ensure 'storage' is also imported from your config
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc,setDoc, doc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 // Reference to the quiz collection
@@ -15,14 +15,19 @@ export const addQuizQuestion = async (question,image) => {
       imageUrl = await getDownloadURL(imageRef);
     }
 
-    const docRef = await addDoc(quizCollection, {
+    const docRef = doc(quizCollection);
+
+    await setDoc(docRef, {
       question,
       image: imageUrl,
       options: '',
-      uid: '',
+      id: docRef.id,
+      uid:" ",
       createdAt: new Date(),
     });
-    return docRef;
+
+
+    return docRef.id;
   } catch (error) {
     console.error('Error adding quiz question:', error);
     throw error;

@@ -6,9 +6,14 @@ import * as yup from 'yup';
 import { addQuizQuestion } from 'service/quizservice';
 
 const schema = yup.object().shape({
-  question: yup.string().required('Question is required').max(1000, 'Question must be at most 1000 characters'),
-  image: yup.mixed()
+  question: yup.string().max(1000, 'Question must be at most 1000 characters'),
+  image: yup
+  .mixed()
+  .test('fileRequired', 'Image is required', (value) => {
+    return value && value.length > 0; // Check if file array has items
+  }),
 });
+
 
 const Quiz = () => {
   const { handleSubmit, register, formState: { errors }, reset } = useForm({
