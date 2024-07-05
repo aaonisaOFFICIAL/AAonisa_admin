@@ -13,6 +13,7 @@ const AllVideos = () => {
   const getData = async () => {
     try {
       const usersCollection = collection(db, 'videos');
+      console.log(usersCollection)
       const usersSnapshot = await getDocs(usersCollection, where('date', '>=', form), where('date', '<=', to));
     const usersData = usersSnapshot.docs.map((doc) => doc.data());
 

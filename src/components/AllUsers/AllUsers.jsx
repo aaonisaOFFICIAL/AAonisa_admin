@@ -5,43 +5,46 @@ import React, { useEffect, useState } from 'react';
 
 const AllUsers = () => {
   const [users, setUsers] = useState([]);
-
-  const getData = async () => {
-    try {
-      const usersCollection = collection(db, 'users');
-      const usersSnapshot = await getDocs(usersCollection);
-
-      const userData = [];
-      for (const userDoc of usersSnapshot.docs) {
-        const user = userDoc.data();
-        const postsCollection = collection(db, 'videos');
-        const userPostsQuery = query(postsCollection, where('uid', '==', user.uid));
-        const postsSnapshot = await getDocs(userPostsQuery);
-
-        let totalLikes = 0;
-        let totalViews = 0;
-        postsSnapshot.forEach(postDoc => {
-          const postData = postDoc.data();
-          totalLikes += postData.likes ? postData.likes.length : 0;
-          totalViews += postData.views ? postData.views : 0;
-        });
-
-        userData.push({
-          ...user,
-          likes: totalLikes,
-          views: totalViews,
-          totalPosts: postsSnapshot.docs.length
-        });
-      }
-
-      setUsers(userData);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getData();
+    const fetchUsersAndPosts = async () => {
+      try {
+        const usersCollection = collection(db, 'users');
+        const usersSnapshot = await getDocs(usersCollection);
+
+        const usersData = usersSnapshot.docs.map((userDoc) => userDoc.data());
+
+        const postsCollection = collection(db, 'videos');
+        const postsQuery = query(postsCollection);
+        const postsSnapshot = await getDocs(postsQuery);
+
+        const postsData = postsSnapshot.docs.map((postDoc) => postDoc.data());
+
+        const userDataWithPosts = usersData.map((user) => {
+          const userPosts = postsData.filter((post) => post.uid === user.uid);
+          const totalLikes = userPosts.reduce((acc, post) => acc + (post.likes ? post.likes.length : 0), 0);
+          const totalViews = userPosts.reduce((acc, post) => acc + (post.views ? post.views : 0), 0);
+
+          return {
+            ...user,
+            likes: totalLikes,
+            views: totalViews,
+            totalPosts: userPosts.length,
+          };
+        });
+
+        setUsers(userDataWithPosts);
+        setPosts(postsData);
+        setLoading(false);
+      } catch (err) {
+        console.error(err);
+        setLoading(false);
+      }
+    };
+
+    fetchUsersAndPosts();
   }, []);
 
   const columns = [
@@ -53,22 +56,28 @@ const AllUsers = () => {
     { Header: 'Plan', accessor: 'Plan' },
     { Header: 'Likes', accessor: 'likes' },
     { Header: 'Views', accessor: 'views' },
-    { Header: 'Total Posts', accessor: 'totalPosts' }
+    { Header: 'Total Posts', accessor: 'totalPosts' },
   ];
 
-  const data = users.map(data => ({
-    username: data.username,
-    Password: data.password,
-    MobileNumber: data.contactNumber,
-    Email: data.email,
-    Followers: data.followers.length,
-    Following: data.following.length,
-    Pic: data.profilePic,
-    Plan: data.plan,
-    likes: data.likes,
-    views: data.views,
-    totalPosts: data.totalPosts
-  }));
+  const data = users.map((user) => {
+    if (!user) return {}; // or some default value
+    return {
+      username: user?.username,
+      MobileNumber: user?.contactNumber,
+      Email: user?.email,
+      Followers: user?.followers ? user.followers.length : 0,
+      Following: user?.following ? user.following.length : 0,
+      Pic: user?.profilePic,
+      Plan: user?.plan,
+      likes: user?.likes,
+      views: user?.views,
+      totalPosts: user?.totalPosts,
+    };
+  });
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return <Table columns={columns} data={data} />;
 };
