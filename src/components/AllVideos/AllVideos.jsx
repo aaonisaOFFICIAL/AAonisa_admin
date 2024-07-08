@@ -28,6 +28,7 @@ const AllVideos = () => {
         Pic: data.thumbnail,
         commentCount: data.commentCount,
         views: data.views,
+        view: data.videoUrl,
       })));
     } catch (err) {
       console.error(err);
@@ -38,6 +39,11 @@ const AllVideos = () => {
     getData();
   }, []);
 
+
+  const handleClick = (e) => {
+    window.open(e, '_blank');
+  };
+
   const columns = [
     { Header: 'Username', accessor: 'username' },
     { Header: 'Share Count', accessor: 'shareCount' },
@@ -46,6 +52,14 @@ const AllVideos = () => {
     { Header: 'Profile Pic', accessor: 'Pic' },
     { Header: 'Comment Count', accessor: 'commentCount' },
     { Header: 'Views', accessor: 'views' },
+    { Header: 'Video Url', accessor: 'view', Cell: ({ row }) => (
+      <span
+        style={{ cursor: 'pointer', color: 'blue' }}
+        onClick={() => window.open(row.original.view, '_blank')}
+      >
+        View
+      </span>
+    ) },
   ];
 
   const handleDateSearch = async () => {
@@ -83,7 +97,7 @@ const AllVideos = () => {
     } else {
       try {
         const usersCollection = collection(db, 'videos');
-        const hashtagQuery = query(usersCollection, where('hashtags', 'array-any-contains', value));
+        const hashtagQuery = query(usersCollection, where('hashtags', 'array-contains', value));
         const usersSnapshot = await getDocs(hashtagQuery);
         const filteredData = usersSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 console.log(filteredData)
