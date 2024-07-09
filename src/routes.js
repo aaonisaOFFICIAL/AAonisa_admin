@@ -40,6 +40,10 @@ import AllHashtags from "components/AllHashtags/AllHashtags";
 import Announcement from "components/Announcement/Announcement";
 import Quiz from "components/AddQuiz/Quiz";
 import HelpandSupport from "components/HelpandSupport/HelpandSupport";
+import LikesData from "components/LIikes/LikesData";
+import FollowerData from "components/Followers/FollowerData";
+import PaymentDetails from "components/PaymentDetails/PaymentDetails";
+import AchieverRankTable from "components/AchieverRank/AchieverRankTable";
 
 
 const user = localStorage.getItem("name")
@@ -210,11 +214,40 @@ const routes = user ? [
     component: SalesmenScreen,
   },
   {
+    name: "Achievers",
+    layout: "/admin",
+    icon: <Icon as={TbReportSearch} width='20px' height='20px' color='inherit' />,
+    path: "/achieverRank",
+    component: AchieverRankTable,
+  },
+  
+  {
     name: "Announcement",
     layout: "/admin",
     icon: <Icon as={TbReportSearch} width='20px' height='20px' color='inherit' />,
     path: "/announcement",
     component: Announcement,
+  },
+  {
+    name: "Followers",
+    layout: "/admin",
+    icon: <Icon as={TbReportSearch} width='20px' height='20px' color='inherit' />,
+    path: "/followers",
+    component: FollowerData,
+  },
+  {
+    name: "Payment Details",
+    layout: "/admin",
+    icon: <Icon as={TbReportSearch} width='20px' height='20px' color='inherit' />,
+    path: "/paymentDetails",
+    component: PaymentDetails,
+  },
+  {
+    name: "Likes",
+    layout: "/admin",
+    icon: <Icon as={TbReportSearch} width='20px' height='20px' color='inherit' />,
+    path: "/likes",
+    component: LikesData,
   },
   {
     name: "Quiz",

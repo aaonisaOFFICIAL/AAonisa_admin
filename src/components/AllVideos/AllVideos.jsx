@@ -1,14 +1,16 @@
+import React, { useEffect, useState } from 'react';
+import Autosuggest from 'react-autosuggest';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from 'Config';
 import Table from '../Tables/Tables';
-import { collection, getDocs, query, where } from 'firebase/firestore';
-import React, { useEffect, useState } from 'react';
-
+import './AllVideos.css'; // Import the CSS file
 const AllVideos = () => {
   const [users, setUsers] = useState([]);
   const [demo, setDemo] = useState([]);
   const [form, setForm] = useState('');
   const [to, setTo] = useState('');
   const [hashtag, setHashtag] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
   const [data, setData] = useState([]);
 
   const getData = async () => {
@@ -16,7 +18,7 @@ const AllVideos = () => {
       const usersCollection = collection(db, 'videos');
       const usersSnapshot = await getDocs(usersCollection);
       const usersData = usersSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-
+console.log(usersData,"---------_>")
       setUsers(usersData);
       setDemo(usersData);
 
@@ -29,6 +31,7 @@ const AllVideos = () => {
         commentCount: data.commentCount,
         views: data.views,
         view: data.videoUrl,
+        Hashtag: data.hashtags
       })));
     } catch (err) {
       console.error(err);
@@ -39,17 +42,22 @@ const AllVideos = () => {
     getData();
   }, []);
 
-
   const handleClick = (e) => {
     window.open(e, '_blank');
   };
 
   const columns = [
+    { Header: 'S.No', accessor: 'sno', Cell: ({ row }) => row.index + 1 },
     { Header: 'Username', accessor: 'username' },
-    { Header: 'Share Count', accessor: 'shareCount' },
+    // { Header: 'Share Count', accessor: 'shareCount' },
     { Header: 'Likes', accessor: 'Followers' },
     { Header: 'Dislikes', accessor: 'Following' },
-    { Header: 'Profile Pic', accessor: 'Pic' },
+    { Header: 'Hashtags', accessor: 'Hashtag',     Cell: ({ value }) => (
+      <div className="hashtag-cell">
+        {value ? value.join(',') : ''}
+      </div>
+    ) },
+    // { Header: 'Profile Pic', accessor: 'Pic' },
     { Header: 'Comment Count', accessor: 'commentCount' },
     { Header: 'Views', accessor: 'views' },
     { Header: 'Video Url', accessor: 'view', Cell: ({ row }) => (
@@ -83,14 +91,14 @@ const AllVideos = () => {
         Pic: data.thumbnail,
         commentCount: data.commentCount,
         views: data.views,
+        view: data.videoUrl, // Ensure videoUrl is included
       })));
     } catch (err) {
       console.error(err);
     }
   };
 
-  const handleHashtagSearch = async (event) => {
-    const value = event.target.value;
+  const handleHashtagSearch = async (value) => {
     setHashtag(value);
     if (value === "") {
       setData(demo);
@@ -100,7 +108,7 @@ const AllVideos = () => {
         const hashtagQuery = query(usersCollection, where('hashtags', 'array-contains', value));
         const usersSnapshot = await getDocs(hashtagQuery);
         const filteredData = usersSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-console.log(filteredData)
+
         setData(filteredData.map(data => ({
           username: data.username,
           shareCount: data.shareCount,
@@ -109,10 +117,44 @@ console.log(filteredData)
           Pic: data.thumbnail,
           commentCount: data.commentCount,
           views: data.views,
+          view: data.videoUrl, // Ensure videoUrl is included
         })));
       } catch (err) {
         console.error(err);
       }
+    }
+  };
+
+  // Autosuggest logic
+  const onSuggestionsFetchRequested = ({ value }) => {
+    const filteredSuggestions = demo
+      .flatMap(data => data.hashtags)
+      .filter((hashtag, index, self) => hashtag.toLowerCase().includes(value.toLowerCase()) && self.indexOf(hashtag) === index);
+
+    setSuggestions(filteredSuggestions);
+  };
+
+  const onSuggestionsClearRequested = () => {
+    setSuggestions([]);
+  };
+
+  const getSuggestionValue = (suggestion) => suggestion;
+
+  const renderSuggestion = (suggestion) => (
+    <div>
+      {suggestion}
+    </div>
+  );
+
+  const onSuggestionSelected = (event, { suggestion }) => {
+    handleHashtagSearch(suggestion);
+  };
+
+  const inputProps = {
+    placeholder: 'Search By Hashtag',
+    value: hashtag,
+    onChange: (event, { newValue }) => {
+      setHashtag(newValue);
     }
   };
 
@@ -125,7 +167,22 @@ console.log(filteredData)
         <div onClick={handleDateSearch} style={{ width: '150px', textAlign: 'center', fontWeight: 'bold', cursor: 'pointer', marginLeft: '10px' }}>Search by Date</div>
       </div>
       <div style={{ marginTop: '20px', display: 'inline-flex' }}>
-        <input onChange={handleHashtagSearch} type='text' placeholder='Search By Hashtag' style={{ marginRight: '10px' }} />
+        <Autosuggest
+          suggestions={suggestions}
+          onSuggestionsFetchRequested={onSuggestionsFetchRequested}
+          onSuggestionsClearRequested={onSuggestionsClearRequested}
+          getSuggestionValue={getSuggestionValue}
+          renderSuggestion={renderSuggestion}
+          onSuggestionSelected={onSuggestionSelected}
+          inputProps={inputProps}
+          theme={{
+            container: 'autosuggest__container',
+            suggestionsContainerOpen: 'autosuggest__suggestions-container--open',
+            suggestionsList: 'autosuggest__suggestions-list',
+            suggestion: 'autosuggest__suggestion',
+            suggestionHighlighted: 'autosuggest__suggestion--highlighted'
+          }}
+        />
       </div>
       <Table columns={columns} data={data} />
     </div>

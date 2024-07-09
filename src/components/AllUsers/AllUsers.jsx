@@ -48,11 +48,12 @@ const AllUsers = () => {
   }, []);
 
   const columns = [
+    { Header: 'S.No', accessor: 'sno', Cell: ({ row }) => row.index + 1 },
     { Header: 'Username', accessor: 'username' },
     { Header: 'Mobile Number', accessor: 'MobileNumber' },
     { Header: 'Followers', accessor: 'Followers' },
-    { Header: 'Following', accessor: 'Following' },
-    { Header: 'Profile Pic', accessor: 'Pic' },
+
+
     { Header: 'Plan', accessor: 'Plan' },
     { Header: 'Likes', accessor: 'likes' },
     { Header: 'Views', accessor: 'views' },
@@ -67,7 +68,6 @@ const AllUsers = () => {
       Email: user?.email,
       Followers: user?.followers ? user.followers.length : 0,
       Following: user?.following ? user.following.length : 0,
-      Pic: user?.profilePic,
       Plan: user?.plan,
       likes: user?.likes,
       views: user?.views,

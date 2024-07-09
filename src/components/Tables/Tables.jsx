@@ -25,7 +25,7 @@ const TableCom = ({ data, columns }) => {
 
     return (
       <>
-        <table {...getTableProps()} style={{ marginTop:"100px", width:"100%", textAlign:"center" }} >
+        <table {...getTableProps()} style={{ marginTop: "20px", width: "100%", textAlign: "center"}}>
           <thead>
             {headerGroups.map((headerGroup) => (
               <tr {...headerGroup.getHeaderGroupProps()}>
@@ -37,6 +37,7 @@ const TableCom = ({ data, columns }) => {
                       background: "aliceblue",
                       color: "black",
                       fontWeight: "bold",
+                      padding: "10px",
                     }}
                   >
                     {column.render("Header")}
@@ -61,13 +62,20 @@ const TableCom = ({ data, columns }) => {
                           padding: "10px",
                           border: "solid 1px gray",
                           background: "papayawhip",
+                          maxWidth: "200px", // Limiting width
+                          maxHeight: "100px", // Limiting height
+                          overflow: "auto", // Enable overflow scrolling
                         }}
                       >
                         {/* Check if the cell accessor corresponds to the "Profile Pic" column */}
                         {cell.column.id === 'Pic' ? (
                           <img src={cell.value} alt="Profile Pic" style={{width: '50px', height: '50px'}} />
                         ) : (
-                          cell.render("Cell")
+                          cell.column.id === 'Hashtag' ? (
+                            <div style={{ maxHeight: "80px", overflowY: "auto" }}>{cell.value.join(', ')}</div>
+                          ) : (
+                            cell.render("Cell")
+                          )
                         )}
                       </td>
                     );
