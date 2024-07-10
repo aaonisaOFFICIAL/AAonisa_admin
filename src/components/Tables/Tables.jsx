@@ -25,7 +25,7 @@ const TableCom = ({ data, columns }) => {
 
     return (
       <>
-        <table {...getTableProps()} style={{ marginTop: "20px", width: "100%", textAlign: "center"}}>
+        <table {...getTableProps()} style={{ marginTop: "80px", width: "100%", textAlign: "center"}}>
           <thead>
             {headerGroups.map((headerGroup) => (
               <tr {...headerGroup.getHeaderGroupProps()}>
