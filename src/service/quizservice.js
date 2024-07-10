@@ -21,13 +21,23 @@ export const addQuizQuestion = async (question,image) => {
       question,
       image: imageUrl,
       options: '',
-      id: docRef.id,
+      quizid: docRef.id,
       uid:" ",
       createdAt: new Date(),
+      allowComment: true, // Set to true if allowComment is undefined or null
+      commentCount:0, // Array with an empty string
+      comment: [""] // Array with an empty string
     });
 
 
-    return docRef.id;
+    return {
+      quizid: docRef.quizid,
+      allowComment:docRef.allowComment,
+      commentCount:docRef.commentCount,
+      comment:docRef.comments
+    };
+
+   
   } catch (error) {
     console.error('Error adding quiz question:', error);
     throw error;
