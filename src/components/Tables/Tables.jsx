@@ -72,7 +72,7 @@ const TableCom = ({ data, columns }) => {
                           <img src={cell.value} alt="Profile Pic" style={{width: '50px', height: '50px'}} />
                         ) : (
                           cell.column.id === 'Hashtag' ? (
-                            <div style={{ maxHeight: "80px", overflowY: "auto" }}>{cell.value.join(', ')}</div>
+                            <div style={{ maxHeight: "80px", overflowY: "auto" }}>{cell?.value?.join(',')}</div>
                           ) : (
                             cell.render("Cell")
                           )

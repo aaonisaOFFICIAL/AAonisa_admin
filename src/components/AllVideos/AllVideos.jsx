@@ -152,7 +152,7 @@ console.log(usersData,"---------_>")
 
   const inputProps = {
     placeholder: 'Search By Hashtag',
-    value: hashtag,
+    value: hashtag.trim() || '',
     onChange: (event, { newValue }) => {
       setHashtag(newValue);
     }
