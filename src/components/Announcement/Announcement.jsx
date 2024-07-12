@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Button, Textarea, FormControl, FormErrorMessage, Input, Grid, GridItem, Heading, Text } from '@chakra-ui/react';
+import { Box, Button, Textarea, FormControl, FormErrorMessage, Input, Grid, GridItem, Heading, Text, useToast } from '@chakra-ui/react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { addAnnouncement, getAnnouncements } from 'service/announcementService'; // Adjust path as necessary
 import ReactPaginate from 'react-paginate';
-
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 const schema = yup.object().shape({
-  content: yup.string().max(1000, 'Content must be at most 1000 characters').required('Content is required'),
+  content: yup.string().max(1000, 'Content must be at most 1000 characters'),
   image: yup.mixed().test('fileSize', 'The file is too large', (value) => {
     return value && value[0] ? value[0].size <= 2 * 1024 * 1024 : true; // Max 2MB
   })
@@ -39,7 +40,30 @@ const Announcement = () => {
   const onSubmit = async (data) => {
     try {
       const { content, image } = data;
+      if (!content && !image[0]) {
+        toast.dismiss()
+        toast.error("Please enter either content or an image.", {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+        return;
+      }
       await addAnnouncement(content, image[0]); // Assuming image[0] is the file
+      toast.dismiss()
+      toast.success("Your announcement has been successfully added.", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
       reset();
       fetchAnnouncements(); // Refresh announcements after adding new one
     } catch (error) {
@@ -61,6 +85,7 @@ const Announcement = () => {
 
   return (
     <Box marginTop='100px'>
+        <ToastContainer />
       <Box mb={8}>
         <Heading size="md" mb={4}>Add New Announcement</Heading>
         <form onSubmit={handleSubmit(onSubmit)}>

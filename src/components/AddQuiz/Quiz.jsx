@@ -4,7 +4,8 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { addQuizQuestion } from 'service/quizservice';
-
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 const schema = yup.object().shape({
   question: yup.string().max(1000, 'Question must be at most 1000 characters'),
   image: yup
@@ -24,6 +25,16 @@ const Quiz = () => {
     try {
       const { question, image } = data;
       await addQuizQuestion(question, image[0]);
+      toast.dismiss()
+      toast.success("Your announcement has been successfully added.", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
       reset(); // Reset the entire form
     } catch (error) {
       console.error('Error adding quiz question:', error);
@@ -32,6 +43,7 @@ const Quiz = () => {
 
   return (
     <Box marginTop='100px'>
+           <ToastContainer />
       <form onSubmit={handleSubmit(onSubmit)}>
         <FormControl isInvalid={!!errors.question} mb={4}>
           <Textarea 
