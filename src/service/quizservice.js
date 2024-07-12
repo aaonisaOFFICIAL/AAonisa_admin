@@ -26,7 +26,8 @@ export const addQuizQuestion = async (question,image) => {
       createdAt: new Date(),
       allowComment: true, // Set to true if allowComment is undefined or null
       commentCount:0, // Array with an empty string
-      comment: [""] // Array with an empty string
+      comment: [""] ,// Array with an empty string
+      likeComment:0
     });
 
 
@@ -34,7 +35,8 @@ export const addQuizQuestion = async (question,image) => {
       quizid: docRef.quizid,
       allowComment:docRef.allowComment,
       commentCount:docRef.commentCount,
-      comment:docRef.comments
+      comment:docRef.comments,
+      likeComment:docRef.likeComment
     };
 
    

@@ -26,7 +26,7 @@ const Quiz = () => {
       const { question, image } = data;
       await addQuizQuestion(question, image[0]);
       toast.dismiss()
-      toast.success("Your announcement has been successfully added.", {
+      toast.success("Your quiz has been successfully added.", {
         position: "top-right",
         autoClose: 5000,
         hideProgressBar: false,

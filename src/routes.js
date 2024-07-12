@@ -44,6 +44,7 @@ import LikesData from "components/LIikes/LikesData";
 import FollowerData from "components/Followers/FollowerData";
 import PaymentDetails from "components/PaymentDetails/PaymentDetails";
 import AchieverRankTable from "components/AchieverRank/AchieverRankTable";
+import Notification from "components/NotficationWorkjustSearch/Notification";
 
 
 const user = localStorage.getItem("name")
@@ -234,6 +235,13 @@ const routes = user ? [
     icon: <Icon as={TbReportSearch} width='20px' height='20px' color='inherit' />,
     path: "/followers",
     component: FollowerData,
+  },
+  {
+    name: "Notification Just search",
+    layout: "/admin",
+    icon: <Icon as={TbReportSearch} width='20px' height='20px' color='inherit' />,
+    path: "/Notification",
+    component: Notification,
   },
   {
     name: "Payment Details",
