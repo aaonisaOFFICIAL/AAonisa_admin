@@ -46,6 +46,12 @@ import PaymentDetails from "components/PaymentDetails/PaymentDetails";
 import AchieverRankTable from "components/AchieverRank/AchieverRankTable";
 import Notification from "components/NotficationWorkjustSearch/Notification";
 
+import PaidUserControl from "components/PaidUserControl/PaidUserControl";
+
+
+
+
+
 
 const user = localStorage.getItem("name")
 
@@ -272,7 +278,13 @@ const routes = user ? [
     path: "/HelpandSupport",
     component: HelpandSupport,
   },
-
+  {
+    name: "Paid User Control",
+    layout: "/admin",
+    icon: <Icon as={TbReportSearch} width='20px' height='20px' color='inherit' />,
+    path: "/PaiduserControl",
+    component: PaidUserControl,
+  },
   
 
 ]:[

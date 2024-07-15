@@ -27,7 +27,9 @@ export const addQuizQuestion = async (question,image) => {
       allowComment: true, // Set to true if allowComment is undefined or null
       commentCount:0, // Array with an empty string
       comment: [""] ,// Array with an empty string
-      likeComment:0
+      profile:"",
+      likeComment:0,
+      commentimage:"",
     });
 
 
@@ -36,7 +38,9 @@ export const addQuizQuestion = async (question,image) => {
       allowComment:docRef.allowComment,
       commentCount:docRef.commentCount,
       comment:docRef.comments,
-      likeComment:docRef.likeComment
+      profile:docRef.profile,
+      likeComment:docRef.likeComment,
+      commentimage:docRef.commentimage
     };
 
    
