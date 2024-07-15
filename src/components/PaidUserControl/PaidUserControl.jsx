@@ -86,10 +86,10 @@ const PaidUserControl = () => {
     // };
 
     const handlePaidToggle = (user, type) => {
-        return 
-        // setSelectedUser(user);
-        // setActionType(type);
-        // onOpen();
+         
+        setSelectedUser(user);
+        setActionType(type);
+        onOpen();
     };
 
     const handleSearch = () => {
