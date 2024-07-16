@@ -30,6 +30,10 @@ export const addQuizQuestion = async (question,image) => {
       profile:"",
       likeComment:0,
       commentimage:[],
+      Likestatus:false,
+      likes:[],
+      pincomment:false,
+
     });
 
 
@@ -40,7 +44,10 @@ export const addQuizQuestion = async (question,image) => {
       comment:docRef.comments,
       profile:docRef.profile,
       likeComment:docRef.likeComment,
-      commentimage:docRef.commentimage
+      commentimage:docRef.commentimage,
+      Likestatus:docRef.Likestatus,
+      likes:docRef.likes,
+      pincomment:docRef.pincomment
     };
 
    
