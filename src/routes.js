@@ -52,6 +52,10 @@ import MainReferal from "JustSearchAdmin/ReferralCode/MainReferal";
 import MainSales from "JustSearchAdmin/SalesPersonManagement/MainSales";
 import MainBusiness from "JustSearchAdmin/BusinessManagement/MainBusiness";
 import MainCalculation from "JustSearchAdmin/Incentive/MainCalculation";
+import MainAnalytics from "JustSearchAdmin/Analytics/MainAnalytics";
+import UserJs from "JustSearchAdmin/Usermanagement/UserJs";
+import MainSetting from "JustSearchAdmin/UserSetting/MainSetting";
+import MainFaqs from "JustSearchAdmin/FAQ/MainFaqs";
 
 
 
@@ -247,13 +251,7 @@ const routes = user ? [
     path: "/followers",
     component: FollowerData,
   },
-  {
-    name: "Notification Just search",
-    layout: "/admin",
-    icon: <Icon as={TbReportSearch} width='20px' height='20px' color='inherit' />,
-    path: "/Notification",
-    component: Notification,
-  },
+
   {
     name: "Payment Details",
     layout: "/admin",
@@ -301,32 +299,69 @@ const routes = user ? [
     component: DashboardJS,
   },
   {
-    name: "Referal management",
+    name: "Referal management Just Search",
     layout: "/admin",
     icon: <Icon as={TbReportSearch} width='20px' height='20px' color='inherit' />,
     path: "/ReferalJS",
     component: MainReferal,
   },
   {
-    name: "Sales Management",
+    name: "Sales Management Just Search" ,
     layout: "/admin",
     icon: <Icon as={TbReportSearch} width='20px' height='20px' color='inherit' />,
     path: "/SalesJS",
     component: MainSales,
   },
   {
-    name: "Business Management",
+    name: "Business Management Just Search",
     layout: "/admin",
     icon: <Icon as={TbReportSearch} width='20px' height='20px' color='inherit' />,
     path: "/BusinessJS",
     component: MainBusiness,
   },
   {
-    name: "Incentive Management",
+    name: "Incentive Management Just Search",
     layout: "/admin",
     icon: <Icon as={TbReportSearch} width='20px' height='20px' color='inherit' />,
     path: "/IncentiveJS",
     component: MainCalculation,
+  },
+
+  {
+    name: "Notification Just search Just Search",
+    layout: "/admin",
+    icon: <Icon as={TbReportSearch} width='20px' height='20px' color='inherit' />,
+    path: "/Notification",
+    component: Notification,
+  },
+  {
+    name: "Analysis and Report Just search",
+    layout: "/admin",
+    icon: <Icon as={TbReportSearch} width='20px' height='20px' color='inherit' />,
+    path: "/Analytics",
+    component: MainAnalytics,
+  },
+  {
+    name: "User Management Just Search",
+    layout: "/admin",
+    icon: <Icon as={TbReportSearch} width='20px' height='20px' color='inherit' />,
+    path: "/UserJs",
+    component: UserJs,
+  },
+
+  {
+    name: "User Setting Just Search",
+    layout: "/admin",
+    icon: <Icon as={TbReportSearch} width='20px' height='20px' color='inherit' />,
+    path: "/UserSettingJs",
+    component: MainSetting,
+  },
+  {
+    name: "Help and Support Just Search",
+    layout: "/admin",
+    icon: <Icon as={TbReportSearch} width='20px' height='20px' color='inherit' />,
+    path: "/MainFaqs",
+    component: MainFaqs,
   },
   
   
