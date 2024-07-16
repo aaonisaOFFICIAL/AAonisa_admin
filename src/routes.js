@@ -47,6 +47,11 @@ import AchieverRankTable from "components/AchieverRank/AchieverRankTable";
 import Notification from "components/NotficationWorkjustSearch/Notification";
 
 import PaidUserControl from "components/PaidUserControl/PaidUserControl";
+import DashboardJS from "JustSearchAdmin/Dashboard/JustSearchDashboard";
+import MainReferal from "JustSearchAdmin/ReferralCode/MainReferal";
+import MainSales from "JustSearchAdmin/SalesPersonManagement/MainSales";
+import MainBusiness from "JustSearchAdmin/BusinessManagement/MainBusiness";
+import MainCalculation from "JustSearchAdmin/Incentive/MainCalculation";
 
 
 
@@ -287,6 +292,44 @@ const routes = user ? [
   },
   
 
+
+  {
+    name: "Just Search Admin",
+    layout: "/admin",
+    icon: <Icon as={TbReportSearch} width='20px' height='20px' color='inherit' />,
+    path: "/DashboardJS",
+    component: DashboardJS,
+  },
+  {
+    name: "Referal management",
+    layout: "/admin",
+    icon: <Icon as={TbReportSearch} width='20px' height='20px' color='inherit' />,
+    path: "/ReferalJS",
+    component: MainReferal,
+  },
+  {
+    name: "Sales Management",
+    layout: "/admin",
+    icon: <Icon as={TbReportSearch} width='20px' height='20px' color='inherit' />,
+    path: "/SalesJS",
+    component: MainSales,
+  },
+  {
+    name: "Business Management",
+    layout: "/admin",
+    icon: <Icon as={TbReportSearch} width='20px' height='20px' color='inherit' />,
+    path: "/BusinessJS",
+    component: MainBusiness,
+  },
+  {
+    name: "Incentive Management",
+    layout: "/admin",
+    icon: <Icon as={TbReportSearch} width='20px' height='20px' color='inherit' />,
+    path: "/IncentiveJS",
+    component: MainCalculation,
+  },
+  
+  
 ]:[
   {
     name: "Login",

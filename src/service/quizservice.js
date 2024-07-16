@@ -29,7 +29,7 @@ export const addQuizQuestion = async (question,image) => {
       comment: [""] ,// Array with an empty string
       profile:"",
       likeComment:0,
-      commentimage:"",
+      commentimage:[],
     });
 
 
