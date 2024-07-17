@@ -1,5 +1,5 @@
 import { db, storage } from 'Config'; // Ensure 'storage' is also imported from your config
-import { collection, addDoc,setDoc, doc } from 'firebase/firestore';
+import { collection,setDoc, doc ,Timestamp} from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 // Reference to the quiz collection
@@ -33,6 +33,7 @@ export const addQuizQuestion = async (question,image) => {
       Likestatus:false,
       likes:[],
       pincomment:false,
+      created_at: Timestamp.now(), 
 
     });
 
@@ -47,7 +48,8 @@ export const addQuizQuestion = async (question,image) => {
       commentimage:docRef.commentimage,
       Likestatus:docRef.Likestatus,
       likes:docRef.likes,
-      pincomment:docRef.pincomment
+      createdAt:docRef.createdAt,
+      created_at:docRef.created_at
     };
 
    
