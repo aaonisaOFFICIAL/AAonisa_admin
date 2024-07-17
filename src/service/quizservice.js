@@ -34,7 +34,7 @@ export const addQuizQuestion = async (question,image) => {
       likes:[],
       pincomment:false,
       created_at: Timestamp.now(), 
-
+      likecount:0
     });
 
 
@@ -49,7 +49,8 @@ export const addQuizQuestion = async (question,image) => {
       Likestatus:docRef.Likestatus,
       likes:docRef.likes,
       createdAt:docRef.createdAt,
-      created_at:docRef.created_at
+      created_at:docRef.created_at,
+      likecount:docRef.likecount
     };
 
    

@@ -51,6 +51,7 @@ const AllUsers = () => {
     { Header: 'S.No', accessor: 'sno', Cell: ({ row }) => row.index + 1 },
     { Header: 'Username', accessor: 'username' },
     { Header: 'Mobile Number', accessor: 'MobileNumber' },
+    { Header: 'Refer by', accessor: 'referby' },
     { Header: 'Followers', accessor: 'Followers' },
 
 

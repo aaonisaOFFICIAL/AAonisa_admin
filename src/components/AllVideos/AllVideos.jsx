@@ -1,48 +1,70 @@
-
-
 import React, { useEffect, useState } from 'react';
 import Autosuggest from 'react-autosuggest';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from 'Config';
 import Table from '../Tables/Tables';
 import './AllVideos.css'; // Import the CSS file
+
 const AllVideos = () => {
   const [users, setUsers] = useState([]);
-  const [demo, setDemo] = useState([]);
+  const [videos, setVideos] = useState([]);
+  const [mergedData, setMergedData] = useState([]);
   const [form, setForm] = useState('');
   const [to, setTo] = useState('');
   const [hashtag, setHashtag] = useState('');
   const [suggestions, setSuggestions] = useState([]);
-  const [data, setData] = useState([]);
+  const [demo, setDemo] = useState([]);
 
-  const getData = async () => {
+  const getUsers = async () => {
     try {
-      const usersCollection = collection(db, 'videos');
+      const usersCollection = collection(db, 'users');
       const usersSnapshot = await getDocs(usersCollection);
       const usersData = usersSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-console.log(usersData,"---------_>")
       setUsers(usersData);
-      setDemo(usersData);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-      setData(usersData.map(data => ({
-        username: data.username,
-        shareCount: data.shareCount,
-        Followers: data.likes.length,
-        Following: data.dislike.length,
-        Pic: data.thumbnail,
-        commentCount: data.commentCount,
-        views: data.views,
-        view: data.videoUrl,
-        Hashtag: data.hashtags
-      })));
+  const getVideos = async () => {
+    try {
+      const videosCollection = collection(db, 'videos');
+      const videosSnapshot = await getDocs(videosCollection);
+      const videosData = videosSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setVideos(videosData);
+      setDemo(videosData);
     } catch (err) {
       console.error(err);
     }
   };
 
   useEffect(() => {
-    getData();
+    getUsers();
+    getVideos();
   }, []);
+
+  useEffect(() => {
+    const mergeData = () => {
+      const data = videos.map(video => {
+        const user = users.find(user => user.uid === video.uid) || {};
+        return {
+          ...video,
+          username: video.username,
+          mobileNumber: user.contactNumber || 'N/A', // Adding mobileNumber from users collection
+          Followers: video.likes.length,
+          Following: video.dislike.length,
+          Pic: video.thumbnail,
+          commentCount: video.commentCount,
+          views: video.views,
+          view: video.videoUrl,
+          Hashtag: video.hashtags
+        };
+      });
+      setMergedData(data);
+      setDemo(data);
+    };
+    mergeData();
+  }, [users, videos]);
 
   const handleClick = (e) => {
     window.open(e, '_blank');
@@ -51,15 +73,14 @@ console.log(usersData,"---------_>")
   const columns = [
     { Header: 'S.No', accessor: 'sno', Cell: ({ row }) => row.index + 1 },
     { Header: 'Username', accessor: 'username' },
-    // { Header: 'Share Count', accessor: 'shareCount' },
+    { Header: 'Mobile Number', accessor: 'mobileNumber' },
     { Header: 'Likes', accessor: 'Followers' },
     { Header: 'Dislikes', accessor: 'Following' },
-    { Header: 'Hashtags', accessor: 'Hashtag',     Cell: ({ value }) => (
+    { Header: 'Hashtags', accessor: 'Hashtag', Cell: ({ value }) => (
       <div className="hashtag-cell">
         {value ? value.join(',') : ''}
       </div>
     ) },
-    // { Header: 'Profile Pic', accessor: 'Pic' },
     { Header: 'Comment Count', accessor: 'commentCount' },
     { Header: 'Views', accessor: 'views' },
     { Header: 'Video Url', accessor: 'view', Cell: ({ row }) => (
@@ -76,24 +97,24 @@ console.log(usersData,"---------_>")
     try {
       const fromDateTimestamp = new Date(form).getTime();
       const toDateTimestamp = new Date(to).getTime();
-      const usersCollection = collection(db, 'videos');
+      const videosCollection = collection(db, 'videos');
       const dateQuery = query(
-        usersCollection,
+        videosCollection,
         where('date', '>=', new Date(fromDateTimestamp)),
         where('date', '<=', new Date(toDateTimestamp))
       );
-      const usersSnapshot = await getDocs(dateQuery);
-      const filteredData = usersSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-
-      setData(filteredData.map(data => ({
+      const videosSnapshot = await getDocs(dateQuery);
+      const filteredData = videosSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setMergedData(filteredData.map(data => ({
         username: data.username,
-        shareCount: data.shareCount,
+        mobileNumber: users.find(user => user.uid === data.uid)?.mobileNumber || 'N/A',
         Followers: data.likes.length,
         Following: data.dislike.length,
         Pic: data.thumbnail,
         commentCount: data.commentCount,
         views: data.views,
         view: data.videoUrl, // Ensure videoUrl is included
+        Hashtag: data.hashtags
       })));
     } catch (err) {
       console.error(err);
@@ -103,23 +124,23 @@ console.log(usersData,"---------_>")
   const handleHashtagSearch = async (value) => {
     setHashtag(value);
     if (value === "") {
-      setData(demo);
+      setMergedData(demo);
     } else {
       try {
-        const usersCollection = collection(db, 'videos');
-        const hashtagQuery = query(usersCollection, where('hashtags', 'array-contains', value));
-        const usersSnapshot = await getDocs(hashtagQuery);
-        const filteredData = usersSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-
-        setData(filteredData.map(data => ({
+        const videosCollection = collection(db, 'videos');
+        const hashtagQuery = query(videosCollection, where('hashtags', 'array-contains', value));
+        const videosSnapshot = await getDocs(hashtagQuery);
+        const filteredData = videosSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        setMergedData(filteredData.map(data => ({
           username: data.username,
-          shareCount: data.shareCount,
+          mobileNumber: users.find(user => user.uid === data.uid)?.mobileNumber || 'N/A',
           Followers: data.likes.length,
           Following: data.dislike.length,
           Pic: data.thumbnail,
           commentCount: data.commentCount,
           views: data.views,
           view: data.videoUrl, // Ensure videoUrl is included
+          Hashtag: data.hashtags
         })));
       } catch (err) {
         console.error(err);
@@ -186,7 +207,7 @@ console.log(usersData,"---------_>")
           }}
         />
       </div>
-      <Table columns={columns} data={data} />
+      <Table columns={columns} data={mergedData} />
     </div>
   );
 };
