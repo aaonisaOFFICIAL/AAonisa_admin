@@ -28,6 +28,7 @@ ReactDOM.render(
 						<Route path={`/edithashtags/:id`} component={EditHashtags} />
 						<Route path={`/rtl`} component={RtlLayout} />
 						<Redirect from='/' to='/admin/login' />
+						
 					</Switch>
 				</HashRouter>
 			</ThemeEditorProvider>
