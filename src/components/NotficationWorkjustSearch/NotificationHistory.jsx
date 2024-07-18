@@ -1,8 +1,9 @@
-// NotificationHistory.jsx
-
+// src/components/NotificationHistory.js
 import React, { useState, useEffect } from 'react';
-import { Box, Table, Thead, Tbody, Tr, Th, Td, TableCaption, Select } from '@chakra-ui/react';
+import { Box, Table, Thead, Tbody, Tr, Th, Td } from '@chakra-ui/react';
 import ReactPaginate from 'react-paginate';
+import { collection, getDocs, updateDoc, doc, Timestamp } from 'firebase/firestore';
+import { JSdb } from "JSConfig"; // Assuming you have initialized Firebase
 
 const NotificationHistory = () => {
   const [notifications, setNotifications] = useState([]);
@@ -10,13 +11,18 @@ const NotificationHistory = () => {
   const notificationsPerPage = 10; // Number of notifications per page
 
   useEffect(() => {
-    // Fetch notifications from Firebase or your backend
-    // Example fetch logic
+    // Fetch notifications from Firestore
     const fetchNotifications = async () => {
       try {
-        // Replace with actual fetching logic
-        const data = []; // Fetch data from Firebase or API
-        setNotifications(data);
+        const querySnapshot = await getDocs(collection(JSdb, 'notifications'));
+        const data = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+
+        // Sort by createdAt in descending order
+        const sortedData = data.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
+        setNotifications(sortedData);
       } catch (error) {
         console.error('Error fetching notifications:', error);
       }
@@ -24,6 +30,29 @@ const NotificationHistory = () => {
 
     fetchNotifications();
   }, []);
+
+  // Check and update notification status dynamically
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const updatedNotifications = notifications.map(notification => {
+        if (notification.status === 'scheduled' && notification.scheduleDate.toDate() <= new Date()) {
+          // Update status to 'sent' in Firestore
+          updateDoc(doc(JSdb, 'notifications', notification.id), {
+            status: 'sent'
+          });
+          // Update locally to reflect changes immediately
+          return {
+            ...notification,
+            status: 'sent'
+          };
+        }
+        return notification;
+      });
+      setNotifications(updatedNotifications);
+    }, 60000); // Check every minute
+
+    return () => clearInterval(interval);
+  }, [notifications]);
 
   const pageCount = Math.ceil(notifications.length / notificationsPerPage);
 
@@ -38,14 +67,13 @@ const NotificationHistory = () => {
         <Td>{notification.title}</Td>
         <Td>{notification.targetAudience}</Td>
         <Td>{notification.status}</Td>
-        <Td>{notification.dateSent}</Td>
+        <Td>{notification.scheduleDate.toDate().toLocaleString()}</Td>
       </Tr>
     ));
 
   return (
     <Box mt={4}>
       <Table variant="simple">
-        
         <Thead>
           <Tr>
             <Th>Title</Th>

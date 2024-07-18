@@ -1,49 +1,97 @@
-// NotificationCreateForm.jsx
+// src/components/CreateNotification.js
+import React, { useState } from 'react';
+import { Box, Heading, Input, Stack, Button, Select, Textarea } from "@chakra-ui/react";
+import { collection, addDoc ,Timestamp} from "firebase/firestore";
+import { JSdb } from "JSConfig";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+const CreateNotification = ({ onNotificationCreated }) => {
+  const [title, setTitle] = useState('');
+  const [message, setMessage] = useState('');
+  const [targetAudience, setTargetAudience] = useState('');
+  const [scheduleDate, setScheduleDate] = useState('');
 
-import React from 'react';
-import { useForm } from 'react-hook-form';
-import { Box, Button, FormControl, FormErrorMessage, FormLabel, Input, Select, Stack } from '@chakra-ui/react';
 
-const NotificationCreateForm = () => {
-  const { register, handleSubmit, formState: { errors } } = useForm();
+  const handleSave = async () => {
+    try {
+      if (!message) {
+        toast.dismiss()
+        toast.dismiss()
+        toast.error("Please enter a message before creating the notification.", {
+          // position: "top-right",
+          title: "Message Required",
+   
+            status: "warning",
+            duration: 5000,
+            isClosable: true,
+        });
+        return; // Prevent further execution if message is empty
+      }
 
-  const onSubmit = (data) => {
-    // Handle submission logic (e.g., send notification to Firebase)
-    console.log(data);
+      const scheduleTimestamp = scheduleDate ? Timestamp.fromDate(new Date(scheduleDate)) : null;
+      const newNotification = {
+        title,
+        message,
+        targetAudience,
+        scheduleDate: scheduleTimestamp,
+        status: scheduleTimestamp ? 'scheduled' : 'sent',
+        createdAt: Timestamp.now()
+      };
+      await addDoc(collection(JSdb, 'notifications'), newNotification);
+      toast.dismiss()
+      toast.success("Your notification has been successfully added.", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      setTitle('');
+      setMessage('');
+      setTargetAudience('');
+      setScheduleDate('');
+      onNotificationCreated();
+    } catch (error) {
+      console.error('Error creating notification:', error);
+      alert('Failed to create notification. Please try again.');
+    }
   };
 
   return (
-    <Box borderWidth="1px" borderRadius="lg" p={4}>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <Stack spacing={4}>
-          <FormControl isInvalid={errors.title}>
-            <FormLabel htmlFor="title">Notification Title</FormLabel>
-            <Input id="title" placeholder="Enter notification title" {...register('title', { required: 'Title is required' })} />
-            <FormErrorMessage>{errors.title && errors.title.message}</FormErrorMessage>
-          </FormControl>
-
-          <FormControl isInvalid={errors.message}>
-            <FormLabel htmlFor="message">Notification Message</FormLabel>
-            <Input id="message" placeholder="Enter notification message" {...register('message', { required: 'Message is required' })} />
-            <FormErrorMessage>{errors.message && errors.message.message}</FormErrorMessage>
-          </FormControl>
-
-          <FormControl isInvalid={errors.targetAudience}>
-            <FormLabel htmlFor="targetAudience">Target Audience</FormLabel>
-            <Select id="targetAudience" placeholder="Select target audience" {...register('targetAudience', { required: 'Target audience is required' })}>
-              <option value="users">Users</option>
-              <option value="businessOwners">Business Owners</option>
-            </Select>
-            <FormErrorMessage>{errors.targetAudience && errors.targetAudience.message}</FormErrorMessage>
-          </FormControl>
-
-          {/* Additional fields for scheduling options can be added here */}
-
-          <Button type="submit" colorScheme="blue" mt={4}>Create Notification</Button>
-        </Stack>
-      </form>
+    <Box p={5} shadow="md" borderWidth="1px">
+            <ToastContainer />
+      <Heading mb={5}>Create Notification</Heading>
+      <Stack spacing={3}>
+        <Input
+          placeholder="Notification Title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+        <Textarea
+          placeholder="Message"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+        />
+        <Select
+          placeholder="Select Target Audience"
+          value={targetAudience}
+          onChange={(e) => setTargetAudience(e.target.value)}
+        >
+          <option value="users">Users</option>
+          <option value="businessOwners">Business Owners</option>
+        </Select>
+        <Input
+          type="datetime-local"
+          placeholder="Schedule Date"
+          value={scheduleDate}
+          onChange={(e) => setScheduleDate(e.target.value)}
+        />
+        <Button colorScheme="blue" onClick={handleSave}>Create Notification</Button>
+      </Stack>
     </Box>
   );
 };
 
-export default NotificationCreateForm;
+export default CreateNotification;
