@@ -8,13 +8,14 @@ import './AllVideos.css'; // Import the CSS file
 const AllVideos = () => {
   const [users, setUsers] = useState([]);
   const [videos, setVideos] = useState([]);
+  const [reports, setReports] = useState([]);
   const [mergedData, setMergedData] = useState([]);
   const [form, setForm] = useState('');
   const [to, setTo] = useState('');
   const [hashtag, setHashtag] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [demo, setDemo] = useState([]);
-
+console.log(reports,"0000000")
   const getUsers = async () => {
     try {
       const usersCollection = collection(db, 'users');
@@ -38,33 +39,50 @@ const AllVideos = () => {
     }
   };
 
+  const getReports = async () => {
+    try {
+      const reportsCollection = collection(db, 'videoReports');
+      const reportsSnapshot = await getDocs(reportsCollection);
+      const reportsData = reportsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      console.log(reportsData,"-------_>")
+      setReports(reportsData);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     getUsers();
     getVideos();
+    getReports();
   }, []);
 
   useEffect(() => {
     const mergeData = () => {
       const data = videos.map(video => {
         const user = users.find(user => user.uid === video.uid) || {};
+        const report = reports.find(report => report.videoUrl === video.videoUrl) || {};
+  
         return {
           ...video,
           username: video.username,
-          mobileNumber: user.contactNumber || 'N/A', // Adding mobileNumber from users collection
+          mobileNumber: user.contactNumber || 'N/A',
           Followers: video.likes.length,
           Following: video.dislike.length,
           Pic: video.thumbnail,
           commentCount: video.commentCount,
           views: video.views,
           view: video.videoUrl,
-          Hashtag: video.hashtags
+          Hashtag: video.hashtags,
+          paid: user.plan || 'N/A',
+          report: report.report || 'N/A' // Adding report from userReports collection
         };
       });
       setMergedData(data);
       setDemo(data);
     };
     mergeData();
-  }, [users, videos]);
+  }, [users, videos, reports]);
 
   const handleClick = (e) => {
     window.open(e, '_blank');
@@ -91,6 +109,8 @@ const AllVideos = () => {
         View
       </span>
     ) },
+    { Header: 'Paid', accessor: 'paid' }, // New field for paid
+    { Header: 'Report', accessor: 'report' } // New field for report
   ];
 
   const handleDateSearch = async () => {
@@ -114,7 +134,9 @@ const AllVideos = () => {
         commentCount: data.commentCount,
         views: data.views,
         view: data.videoUrl, // Ensure videoUrl is included
-        Hashtag: data.hashtags
+        Hashtag: data.hashtags,
+        paid: users.find(user => user.uid === data.uid)?.plan || 'N/A',
+        report: reports.find(report => report.uid === data.uid)?.report || 'N/A'
       })));
     } catch (err) {
       console.error(err);
@@ -140,7 +162,9 @@ const AllVideos = () => {
           commentCount: data.commentCount,
           views: data.views,
           view: data.videoUrl, // Ensure videoUrl is included
-          Hashtag: data.hashtags
+          Hashtag: data.hashtags,
+          paid: users.find(user => user.uid === data.uid)?.plan || 'N/A',
+          report: reports.find(report => report.uid === data.uid)?.report || 'N/A'
         })));
       } catch (err) {
         console.error(err);

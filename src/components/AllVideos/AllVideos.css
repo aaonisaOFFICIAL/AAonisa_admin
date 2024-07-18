@@ -41,3 +41,34 @@
     overflow-x: auto;
   }
   
+
+  .pagination {
+    display: flex;
+    justify-content: center;
+    list-style: none;
+    padding: 0;
+  }
+  
+  .pagination li {
+    display: inline;
+    margin: 0 5px;
+  }
+  
+  .pagination li a {
+    cursor: pointer;
+    padding: 10px;
+    border: 1px solid #ddd;
+    color: #007bff;
+    text-decoration: none;
+  }
+  
+  .pagination li a:hover {
+    background-color: #007bff;
+    color: white;
+  }
+  
+  .pagination li.active a {
+    background-color: #007bff;
+    color: white;
+  }
+  
