@@ -32,7 +32,8 @@ export const addQuizQuestion = async (question, image) => {
       pincomment: false,
       created_at: Timestamp.now(),
       likecount: 0,
-      pinstatus:false
+      pinstatus:false,
+      pinnedComment:[]
     });
 
     return {
@@ -49,6 +50,7 @@ export const addQuizQuestion = async (question, image) => {
       created_at: docRef.created_at,
       likecount: docRef.likecount,
       pinstatus:docRef.pinstatus,
+      pinnedComment:docRef.pinnedComment,
     };
   } catch (error) {
     console.error('Error adding quiz question:', error);
