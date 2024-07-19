@@ -31,7 +31,8 @@ export const addQuizQuestion = async (question, image) => {
       likes: [],
       pincomment: false,
       created_at: Timestamp.now(),
-      likecount: 0
+      likecount: 0,
+      pinstatus:false
     });
 
     return {
@@ -46,7 +47,8 @@ export const addQuizQuestion = async (question, image) => {
       likes: docRef.likes,
       createdAt: docRef.createdAt,
       created_at: docRef.created_at,
-      likecount: docRef.likecount
+      likecount: docRef.likecount,
+      pinstatus:docRef.pinstatus,
     };
   } catch (error) {
     console.error('Error adding quiz question:', error);
@@ -66,7 +68,7 @@ export const deleteQuizQuestion = async (quizId) => {
 
 export const fetchQuizzes = async (page, perPage) => {
   try {
-    const quizQuery = query(quizCollection, orderBy('created_at', 'desc'), limit(perPage));
+    const quizQuery = query(quizCollection, orderBy('createdAt', 'desc'), limit(perPage));
     const snapshot = await getDocs(quizQuery);
 
     const quizzes = [];
