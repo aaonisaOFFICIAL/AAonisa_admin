@@ -65,22 +65,27 @@ export const deleteQuizQuestion = async (quizId) => {
     throw error;
   }
 };
-
-export const fetchQuizzes = async (page, perPage) => {
+export const fetchQuizzes = async (lastVisible, perPage) => {
   try {
-    const quizQuery = query(quizCollection, orderBy('createdAt', 'desc'), limit(perPage));
+    // Create a query to fetch quizzes
+    let quizQuery = query(quizCollection, orderBy('createdAt', 'desc'), limit(perPage));
+    
+    if (lastVisible) {
+      quizQuery = query(quizQuery, startAfter(lastVisible));
+    }
+
     const snapshot = await getDocs(quizQuery);
 
     const quizzes = [];
     snapshot.forEach((doc) => {
-      quizzes.push(doc.data());
+      quizzes.push({ id: doc.id, ...doc.data() }); // Include document ID
     });
 
-    // Get total quizzes count
+    const newLastVisible = snapshot.docs[snapshot.docs.length - 1];
     const totalSnapshot = await getDocs(query(quizCollection));
     const totalQuizzes = totalSnapshot.size;
 
-    return { data: quizzes, total: totalQuizzes };
+    return { data: quizzes, lastVisible: newLastVisible, total: totalQuizzes };
   } catch (error) {
     console.error('Error fetching quizzes:', error);
     throw error;

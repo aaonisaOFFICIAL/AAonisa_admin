@@ -9,7 +9,6 @@ import {
   Grid,
   Heading,
   IconButton,
-  useToast,
 } from '@chakra-ui/react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -22,7 +21,7 @@ import Swal from 'sweetalert2';
 import { fetchQuizzes, deleteQuizQuestion, addQuizQuestion } from 'service/quizservice'; // Adjust path as necessary
 
 const schema = yup.object().shape({
-  question: yup.string().max(1000, 'Question must be at most 1000 characters').required('Question is required'),
+  question: yup.string().max(1000, 'Question must be at most 1000 characters'),
   image: yup.mixed().test('fileRequired', 'Image is required', (value) => {
     return value && value.length > 0;
   }),
@@ -39,22 +38,31 @@ const Quiz = () => {
   });
 
   const [quizzes, setQuizzes] = useState([]);
-  const [totalQuizzes, setTotalQuizzes] = useState(0); // Total number of quizzes in the database
-  const [currentPage, setCurrentPage] = useState(0); // Page index starts from 0
-  const quizzesPerPage = 4; // Number of quizzes per page
+  const [totalQuizzes, setTotalQuizzes] = useState(0);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [lastVisible, setLastVisible] = useState(null);
+  const [pageData, setPageData] = useState({});
+  const quizzesPerPage = 4;
 
   useEffect(() => {
-    fetchQuizData(currentPage); // Fetch data for the initial page
-  }, [currentPage]); // Trigger fetchQuizData when currentPage changes
+    fetchQuizData(currentPage);
+  }, [currentPage]);
 
   const fetchQuizData = async (page) => {
     try {
-      const { data, total } = await fetchQuizzes(page + 1, quizzesPerPage); // Page starts from 1 in fetchQuizzes
-      setQuizzes(data);
-      setTotalQuizzes(total); // Assuming fetchQuizzes returns total quizzes count
+      const { data, lastVisible: newLastVisible, total } = await fetchQuizzes(
+        page === 0 ? null : lastVisible, 
+        quizzesPerPage
+      );
 
-      // Debug output for totalQuizzes
-      console.log("Total Quizzes:", total);
+      setPageData((prev) => ({
+        ...prev,
+        [page]: { data, lastVisible: newLastVisible, total },
+      }));
+
+      setQuizzes(data);
+      setLastVisible(newLastVisible);
+      setTotalQuizzes(total);
     } catch (error) {
       console.error('Error fetching quizzes:', error);
     }
@@ -64,7 +72,6 @@ const Quiz = () => {
     try {
       const { question, image } = data;
       await addQuizQuestion(question, image[0]);
-      toast.dismiss();
       toast.success('Your quiz has been successfully added.', {
         position: 'top-right',
         autoClose: 5000,
@@ -74,8 +81,9 @@ const Quiz = () => {
         draggable: true,
         progress: undefined,
       });
-      reset(); // Reset the entire form
-      fetchQuizData(currentPage); // Refresh quizzes after adding new one on the current page
+      reset();
+      // Fetch data after adding a quiz
+      fetchQuizData(currentPage);
     } catch (error) {
       console.error('Error adding quiz question:', error);
     }
@@ -93,7 +101,6 @@ const Quiz = () => {
 
       if (confirmation.isConfirmed) {
         await deleteQuizQuestion(quizId);
-        fetchQuizData(currentPage); // Refresh quizzes after deletion
         toast.success('Quiz deleted successfully.', {
           position: 'top-right',
           autoClose: 5000,
@@ -103,8 +110,9 @@ const Quiz = () => {
           draggable: true,
           progress: undefined,
         });
+        // Fetch data after deleting a quiz
+        fetchQuizData(currentPage);
       } else {
-        // User canceled deletion
         Swal.fire('Deletion cancelled', 'Your quiz is safe.', 'info');
       }
     } catch (error) {
@@ -113,17 +121,11 @@ const Quiz = () => {
     }
   };
 
-  // Pagination logic
-  const pageCount = Math.ceil(totalQuizzes / quizzesPerPage);
-
   const handlePageClick = ({ selected }) => {
-    setCurrentPage(selected); // Update current page
+    setCurrentPage(selected);
   };
 
-  // Display quizzes for the current page
-  const indexOfLastQuiz = (currentPage + 1) * quizzesPerPage;
-  const indexOfFirstQuiz = indexOfLastQuiz - quizzesPerPage;
-  const currentQuizzes = quizzes.slice(indexOfFirstQuiz, indexOfLastQuiz);
+  const pageCount = Math.ceil(totalQuizzes / quizzesPerPage);
 
   return (
     <Box marginTop="100px">
@@ -152,20 +154,19 @@ const Quiz = () => {
           All Quizzes
         </Heading>
         <Grid templateColumns="repeat(auto-fill, minmax(300px, 1fr))" gap={4}>
-          {currentQuizzes.map((quiz) => (
-            <Box key={quiz.quizid} p={4} borderWidth="1px" borderRadius="md" position="relative">
+          {quizzes.map((quiz) => (
+            <Box key={quiz.id} p={4} borderWidth="1px" borderRadius="md" position="relative">
               <Heading size="sm">{quiz.question}</Heading>
-              {quiz?.image && quiz?.image !== ' ' && (
+              {quiz.image && (
                 <img src={quiz.image} alt="Quiz" style={{ maxWidth: '100%', marginTop: '8px' }} />
               )}
-              {/* Delete Icon */}
               <IconButton
                 aria-label="Delete quiz"
                 icon={<DeleteIcon />}
                 position="absolute"
                 top="8px"
                 right="8px"
-                onClick={() => handleDelete(quiz.quizid)}
+                onClick={() => handleDelete(quiz.id)}
               />
             </Box>
           ))}
