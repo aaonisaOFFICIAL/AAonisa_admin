@@ -1,10 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Button, Input, Table, Thead, Tbody, Tr, Th, Td, useToast, useDisclosure } from '@chakra-ui/react';
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+    Box, Button, Input, Table, Thead, Tbody, Tr, Th, Td
+} from '@chakra-ui/react';
 import { collection, query, where, getDocs, doc, updateDoc, getDoc } from "firebase/firestore";
-import { db } from 'Config'; 
+import { db } from 'Config';
 import ReactPaginate from 'react-paginate';
-import './paid.css'; // Import the CSS file
-import ConfirmDialog from './ConfirmDialog'; // Import the custom ConfirmDialog component
+import Swal from 'sweetalert2';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import './paid.css';
 
 const PaidUserControl = () => {
     const [users, setUsers] = useState([]);
@@ -13,87 +17,77 @@ const PaidUserControl = () => {
     const [pageCount, setPageCount] = useState(0);
     const [currentPage, setCurrentPage] = useState(0);
     const [filter, setFilter] = useState('all');
-    const toast = useToast();
-    const { isOpen, onOpen, onClose } = useDisclosure();
     const [selectedUser, setSelectedUser] = useState(null);
-    const [actionType, setActionType] = useState('');
+
+    const fetchUsers = useCallback(async () => {
+        let q = query(collection(db, "users"));
+        if (search) {
+            q = query(collection(db, "users"), where("contactNumber", "==", search));
+        }
+        const querySnapshot = await getDocs(q);
+        let usersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        if (validTill) {
+            usersData = usersData.filter(user => {
+                if (!user.validityTo) return false;
+                const [month, year] = validTill.split('-');
+                const [validMonth, validYear] = user.validityTo.split('-');
+                return validYear >= year && (validYear > year || validMonth >= month);
+            });
+        }
+
+        setUsers(usersData);
+        setPageCount(Math.ceil(usersData.length / 10));
+    }, [search, validTill]);
 
     useEffect(() => {
-        const fetchUsers = async () => {
-            let q = query(collection(db, "users"));
-            if (search) {
-                q = query(collection(db, "users"), where("mobileNumber", "==", search));
-            }
-            const querySnapshot = await getDocs(q);
-            let usersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            if (validTill) {
-                usersData = usersData.filter(user => {
-                    if (!user.validityTo) return false;
-                    const [month, year] = validTill.split('-');
-                    const [validMonth, validYear] = user.validityTo.split('-');
-                    return validYear >= year && (validYear > year || validMonth >= month);
-                });
-            }
-            setUsers(usersData);
-            setPageCount(Math.ceil(usersData.length / 10));
-        };
-        
         fetchUsers();
-    }, [search, validTill]);
+    }, [fetchUsers, currentPage]);
+
+    useEffect(() => {
+        const filteredUsers = filter === 'paid' ? users.filter(user => user.paid) : users;
+        setPageCount(Math.ceil(filteredUsers.length / 10));
+    }, [users, filter]);
 
     const handlePageClick = (event) => {
         setCurrentPage(event.selected);
     };
 
-    const handlePaidChange = async () => {
-        if (selectedUser) {
-            const userRef = doc(db, "users", selectedUser.id);
-            const userDoc = await getDoc(userRef);
+    const handlePaidChange = useCallback(async (user) => {
+        const userRef = doc(db, "users", user.id);
+        const userDoc = await getDoc(userRef);
     
-            if (userDoc.exists()) {
-                const updatedPaidStatus = !userDoc.data().paid;
-                await updateDoc(userRef, {
-                    paid: updatedPaidStatus ? '*' : '✔️'
-                });
-                toast({
-                    title: "User updated.",
-                    description: `User payment status has been ${updatedPaidStatus ? 'marked as paid' : 'marked as unpaid'}.`,
-                    status: "success",
-                    duration: 5000,
-                    isClosable: true,
-                });
-                onClose();
-                setSelectedUser(null);
-                setActionType('');
-                // Refetch users to update the list
-                const querySnapshot = await getDocs(query(collection(db, "users")));
-                setUsers(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-            }
+        if (userDoc.exists()) {
+            const updatedPaidStatus = !userDoc.data().paid;
+            await updateDoc(userRef, {
+                paid: updatedPaidStatus
+            });
+            toast.success(`User payment status has been ${updatedPaidStatus ? 'marked as paid' : 'marked as unpaid'}.`, {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            });
+            fetchUsers();
         }
-    };
+    }, [fetchUsers]);
 
-    // const handleReview = async (userId) => {
-    //     const userRef = doc(db, "users", userId);
-    //     await updateDoc(userRef, {
-    //         review: true
-    //     });
-    //     toast({
-    //         title: "User marked for review.",
-    //         status: "success",
-    //         duration: 5000,
-    //         isClosable: true,
-    //     });
-    // };
-
-    const handlePaidToggle = (user, type) => {
-         
-        setSelectedUser(user);
-        setActionType(type);
-        onOpen();
-    };
-
-    const handleSearch = () => {
-        // Trigger the search by setting the validTill state
+    const handlePaidToggle = (user) => {
+        Swal.fire({
+            title: 'Confirm?',
+            text: `Do you want to ${user.paid ? 'unmark' : 'mark'} this user as paid?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes',
+            cancelButtonText: 'No',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                handlePaidChange(user);
+            }
+        });
     };
 
     return (
@@ -111,9 +105,8 @@ const PaidUserControl = () => {
                     onChange={(e) => setValidTill(e.target.value)}
                     mr={2}
                 />
-                {/* <Button onClick={handleSearch} mr={2}>Search</Button>
-                <Button onClick={() => setFilter('all')} mr={2}>All</Button> */}
-                <Button onClick={() => setFilter('paid')}>Paid</Button>
+                <Button onClick={() => setFilter('paid')} mr={2}>Paid</Button>
+                <Button onClick={() => setFilter('all')}>All</Button>
             </Box>
             <Table variant="simple">
                 <Thead>
@@ -125,28 +118,34 @@ const PaidUserControl = () => {
                         <Th>Validity To</Th>
                         <Th>Paid</Th>
                         <Th>Review</Th>
+                        <Th>Remove</Th>
                     </Tr>
                 </Thead>
                 <Tbody>
-                    {users?.slice(currentPage * 10, (currentPage + 1) * 10).filter(user => {
-                        if (filter === 'paid') return user.paid;
-                        return true;
-                    }).map((user, index) => (
-                        <Tr key={user.id}>
-                            <Td>{index + 1}</Td>
-                            <Td>{user.username}</Td>
-                            <Td>{user.mobileNumber}</Td>
-                            <Td>{user.validityFrom}</Td>
-                            <Td>{user.validityTo}</Td>
-                            <Td>
-                                {user.paid ? '✔️' : '❌'}
-                                <Button onClick={() => handlePaidToggle(user, 'paid')}>{user.paid ? 'Unmark Paid' : 'Mark as Paid'}</Button>
-                            </Td>
-                            <Td>
-                                <Button >Hold</Button>
-                            </Td>
-                        </Tr>
-                    ))}
+                    {users
+                        ?.slice(currentPage * 10, (currentPage + 1) * 10)
+                        .filter(user => (filter === 'paid' ? user.paid : true))
+                        .map((user, index) => (
+                            <Tr key={user.id}>
+                                <Td>{currentPage * 10 + index + 1}</Td>
+                                <Td>{user.username}</Td>
+                                <Td>{user.contactNumber}</Td>
+                                <Td>{user.validityFrom}</Td>
+                                <Td>{user.validityTo}</Td>
+                                <Td>
+    {user.paid ? '✔️' : '❌'}
+    <Button onClick={() => handlePaidToggle(user)}>
+        {user.paid ? 'Unmark Paid' : 'Mark as Paid'}
+    </Button>
+</Td>
+                                <Td>
+                                    <Button>Hold</Button>
+                                </Td>
+                                <Td>
+                                    <Button>🗑</Button>
+                                </Td>
+                            </Tr>
+                        ))}
                 </Tbody>
             </Table>
             <ReactPaginate
@@ -161,16 +160,9 @@ const PaidUserControl = () => {
                 containerClassName={'pagination'}
                 subContainerClassName={'pages pagination'}
                 activeClassName={'active'}
+                forcePage={currentPage} // force the current page to stay the same after update
             />
-            {selectedUser && (
-                <ConfirmDialog
-                    isOpen={isOpen}
-                    onClose={onClose}
-                    onConfirm={handlePaidChange}
-                    title="Confirm?"
-                    description={`Do you want to ${selectedUser.paid ? 'unmark' : 'mark'} this user as paid?`}
-                />
-            )}
+            <ToastContainer />
         </Box>
     );
 };
