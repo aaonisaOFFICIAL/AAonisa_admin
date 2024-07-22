@@ -49,6 +49,7 @@ const SalesmanScreen = () => {
     () => [
       { Header: 'S.No', accessor: 'sno', Cell: ({ row }) => row.index + 1 },
       { Header: 'Username', accessor: 'username' },
+      { Header: 'refer id', accessor: 'userdfname' },
       { Header: 'Mobile No.', accessor: 'contactNumber' },
       { Header: 'Plan (Free/Paid)', accessor: 'plan' },
     ],

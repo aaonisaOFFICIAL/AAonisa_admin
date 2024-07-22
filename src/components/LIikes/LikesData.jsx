@@ -10,11 +10,23 @@ const LikesData = () => {
   const [originalData, setOriginalData] = useState([]);
 
   const fetchData = async () => {
-    const usersCollection = collection(db, 'users'); // Adjust collection name as needed
+    const usersCollection = collection(db, 'users');
     const usersSnapshot = await getDocs(usersCollection);
-    const usersData = usersSnapshot.docs.map(doc => doc.data());
-    setData(usersData);
-    setOriginalData(usersData);
+    const usersData = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    const videosCollection = collection(db, 'videos');
+    const videosSnapshot = await getDocs(videosCollection);
+    const videosData = videosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    const mergedData = usersData.map(user => {
+      const userVideos = videosData.filter(video => video.uid === user.uid);
+      const likes = userVideos.reduce((total, video) => total + (video.likes ? video.likes.length  : 0), 0);
+      const dislikes = userVideos.reduce((total, video) => total + (video.dislikes ? video.dislikes.length : 0), 0);
+      return { ...user, likes, dislikes };
+    });
+
+    setData(mergedData);
+    setOriginalData(mergedData);
   };
 
   useEffect(() => {

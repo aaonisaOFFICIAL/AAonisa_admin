@@ -9,7 +9,8 @@ const UserTable = ({ data }) => {
     () => [
       { Header: 'Plan (Free/Paid)', accessor: 'plan' },
       { Header: 'Username', accessor: 'username' },
-      { Header: 'Total No. of Likes', accessor: 'totalLikes' },
+      { Header: 'Mobile Number', accessor: 'contactNumber' },
+      { Header: 'Total No. of Likes', accessor: 'likes' },
       { Header: 'Dislikes', accessor: 'dislikes' },
       { Header: 'Amount (in Rs.)', accessor: 'amount' },
       { Header: 'Paid Done', accessor: 'paidDone' },
