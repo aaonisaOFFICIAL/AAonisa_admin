@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-    Box, Button, Input, Table, Thead, Tbody, Tr, Th, Td
+    Box, Button, Input, Table, Thead, Tbody, Tr, Th, Td, Grid, GridItem
 } from '@chakra-ui/react';
 import { collection, query, where, getDocs, doc, updateDoc, getDoc } from "firebase/firestore";
 import { db } from 'Config';
@@ -13,12 +13,21 @@ import './paid.css';
 const PaidUserControl = () => {
     const [users, setUsers] = useState([]);
     const [search, setSearch] = useState('');
+    const [transactionSearch, setTransactionSearch] = useState('');
     const [validTill, setValidTill] = useState('');
     const [pageCount, setPageCount] = useState(0);
     const [currentPage, setCurrentPage] = useState(0);
+    const [showPaidUsers, setShowPaidUsers] = useState(false);
 
     const fetchUsers = useCallback(async () => {
         let q = query(collection(db, "users"), where("TransactionID", "!=", ""));
+        
+        if (showPaidUsers) {
+            q = query(collection(db, "users"), where("paid", "==", true));
+        } else if (transactionSearch) {
+            q = query(collection(db, "users"), where("TransactionID", "==", transactionSearch));
+        }
+        
         const querySnapshot = await getDocs(q);
         let usersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
@@ -31,9 +40,9 @@ const PaidUserControl = () => {
             });
         }
 
-        setUsers(usersData);
+        setUsers(usersData.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))); // Latest added on top
         setPageCount(Math.ceil(usersData.length / 10));
-    }, [validTill]);
+    }, [validTill, showPaidUsers, transactionSearch]);
 
     useEffect(() => {
         fetchUsers();
@@ -44,6 +53,15 @@ const PaidUserControl = () => {
     };
 
     const handleAddUserToPaidList = useCallback(async (mobileNumber) => {
+        if (!mobileNumber) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Mobile number cannot be empty.',
+            });
+            return;
+        }
+
         const q = query(collection(db, "users"), where("contactNumber", "==", mobileNumber));
         const querySnapshot = await getDocs(q);
         
@@ -114,21 +132,38 @@ const PaidUserControl = () => {
 
     return (
         <Box p={4} m={16}>
-            <Box display="flex" mb={4}>
-                <Input
-                    placeholder="Mobile Number"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    mr={2}
-                />
-                <Button onClick={() => handleAddUserToPaidList(search)}>Add to Paid List</Button>
-                <Input
-                    placeholder="Valid Till (MM-YYYY)"
-                    value={validTill}
-                    onChange={(e) => setValidTill(e.target.value)}
-                    ml={2}
-                />
-            </Box>
+            <Grid templateColumns="repeat(6, 1fr)" gap={2} mb={4}>
+                <GridItem colSpan={{ base: 6, md: 2 }}>
+                    <Input
+                        placeholder="Mobile Number"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                    />
+                </GridItem>
+                <GridItem colSpan={{ base: 6, md: 1 }}>
+                    <Button width="100%" onClick={() => handleAddUserToPaidList(search)}>Add to Paid List</Button>
+                </GridItem>
+                <GridItem colSpan={{ base: 6, md: 1 }}>
+                    <Input
+                        placeholder="Valid Till (MM-YYYY)"
+                        value={validTill}
+                        onChange={(e) => setValidTill(e.target.value)}
+                    />
+                </GridItem>
+                <GridItem colSpan={{ base: 6, md: 1 }}>
+                    <Input
+                        placeholder="Search by Transaction ID"
+                        value={transactionSearch}
+                        onChange={(e) => setTransactionSearch(e.target.value)}
+                    />
+                </GridItem>
+                <GridItem colSpan={{ base: 6, md: 1 }}>
+                    <Button width="100%" onClick={() => setShowPaidUsers(true)}>Show Paid Users</Button>
+                </GridItem>
+                <GridItem colSpan={{ base: 6, md: 1 }}>
+                    <Button width="100%" onClick={() => setShowPaidUsers(false)}>Show All Users</Button>
+                </GridItem>
+            </Grid>
             <Table variant="simple">
                 <Thead>
                     <Tr>
@@ -140,7 +175,6 @@ const PaidUserControl = () => {
                         <Th>Validity To</Th>
                         <Th>Paid</Th>
                         <Th>Review</Th>
-                    
                     </Tr>
                 </Thead>
                 <Tbody>
@@ -156,15 +190,14 @@ const PaidUserControl = () => {
                                 <Td>{user.validityTo}</Td>
                                 <Td>
                                     {user.paid ? '✔️' : '❌'}
-                                    <Button onClick={() => handlePaidToggle(user)}>
+                                    <Button onClick={() => handlePaidToggle(user)} ml={2}>
                                         {user.paid ? 'Unmark Paid' : 'Mark as Paid'}
                                     </Button>
                                 </Td>
                                 <Td>
                                     <Button>Hold</Button>
                                 </Td>
-                                
-                            </Tr>
+                                                            </Tr>
                         ))}
                 </Tbody>
             </Table>
