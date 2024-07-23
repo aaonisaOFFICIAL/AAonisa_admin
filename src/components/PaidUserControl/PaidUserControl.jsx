@@ -2,13 +2,14 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
     Box, Button, Input, Table, Thead, Tbody, Tr, Th, Td, Grid, GridItem
 } from '@chakra-ui/react';
-import { collection, query, where, getDocs, doc, updateDoc, getDoc } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, updateDoc, getDoc ,Timestamp} from "firebase/firestore";
 import { db } from 'Config';
 import ReactPaginate from 'react-paginate';
 import Swal from 'sweetalert2';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import './paid.css';
+import moment from 'moment';
 
 const PaidUserControl = () => {
     const [users, setUsers] = useState([]);
@@ -30,6 +31,19 @@ const PaidUserControl = () => {
         
         const querySnapshot = await getDocs(q);
         let usersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        console.log('usersData:', usersData);
+        // Check and update the paid status based on validityTo date
+        const today = new Date();
+        usersData = usersData.map(user => {
+            if (user.validityTo) {
+                const [month, year] = user.validityTo.split('-');
+                const validTillDate = new Date(year, month - 1, 1);
+                if (validTillDate < today) {
+                    user.paid = false;
+                }
+            }
+            return user;
+        });
 
         if (validTill) {
             usersData = usersData.filter(user => {
@@ -51,58 +65,70 @@ const PaidUserControl = () => {
     const handlePageClick = (event) => {
         setCurrentPage(event.selected);
     };
-
     const handleAddUserToPaidList = useCallback(async (mobileNumber) => {
         if (!mobileNumber) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Oops...',
-                text: 'Mobile number cannot be empty.',
-            });
-            return;
+          Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: 'Mobile number cannot be empty.',
+          });
+          return;
         }
-
+      
         const q = query(collection(db, "users"), where("contactNumber", "==", mobileNumber));
         const querySnapshot = await getDocs(q);
         
         if (!querySnapshot.empty) {
-            const userDoc = querySnapshot.docs[0];
-            const userRef = doc(db, "users", userDoc.id);
-
-            await updateDoc(userRef, {
-                paid: true,
-                TransactionID: "*************"
-            });
-
-            toast.success(`User has been added to the paid list.`, {
-                position: "top-right",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-            });
-            fetchUsers();
+          const userDoc = querySnapshot.docs[0];
+          const userRef = doc(db, "users", userDoc.id);
+      
+          const today = new Date();
+          const validFrom = Timestamp.fromDate(new Date(today.getFullYear(), today.getMonth(), today.getDate()))
+          const validTill =  Timestamp.fromDate(new Date(today.getFullYear() + 1, today.getMonth(), today.getDate()))
+      
+          await updateDoc(userRef, {
+            paid: true,
+            TransactionID: "*************",
+            validFrom: validFrom,
+            validTill: validTill
+          });
+      
+          toast.success(`User has been added to the paid list.`, {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+          fetchUsers();
         } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'Oops...',
-                text: `User with mobile number ${mobileNumber} not found.`,
-            });
+          Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: `User with mobile number ${mobileNumber} not found.`,
+          });
         }
-    }, [fetchUsers]);
-
+      }, [fetchUsers]);
+    console.log(users)
     const handlePaidChange = useCallback(async (user) => {
         const userRef = doc(db, "users", user.id);
         const userDoc = await getDoc(userRef);
-    
+        
         if (userDoc.exists()) {
-            const updatedPaidStatus = !userDoc.data().paid;
+            const updatedPaidStatus =!userDoc.data().paid;
+            const today = new Date();
+            const validFrom = updatedPaidStatus? Timestamp.fromDate(new Date(today.getFullYear(), today.getMonth(), today.getDate())) : '';
+            const validTill = updatedPaidStatus? Timestamp.fromDate(new Date(today.getFullYear() + 1, today.getMonth(), today.getDate())) : '';
+                
             await updateDoc(userRef, {
-                paid: updatedPaidStatus
+                paid: updatedPaidStatus,
+                validFrom: validFrom,
+                validTill: validTill
             });
-            toast.success(`User payment status has been ${updatedPaidStatus ? 'marked as paid' : 'marked as unpaid'}.`, {
+        
+            toast.success(`User payment status has been ${updatedPaidStatus? 'arked as paid' : 'arked as unpaid'}.`, {
                 position: "top-right",
                 autoClose: 5000,
                 hideProgressBar: false,
@@ -114,6 +140,7 @@ const PaidUserControl = () => {
             fetchUsers();
         }
     }, [fetchUsers]);
+    
 
     const handlePaidToggle = (user) => {
         Swal.fire({
@@ -165,42 +192,47 @@ const PaidUserControl = () => {
                 </GridItem>
             </Grid>
             <Table variant="simple">
-                <Thead>
-                    <Tr>
-                        <Th>S.No</Th>
-                        <Th>Username</Th>
-                        <Th>Mobile No.</Th>
-                        <Th>Transaction ID</Th>
-                        <Th>Validity From</Th>
-                        <Th>Validity To</Th>
-                        <Th>Paid</Th>
-                        <Th>Review</Th>
-                    </Tr>
-                </Thead>
-                <Tbody>
-                    {users
-                        ?.slice(currentPage * 10, (currentPage + 1) * 10)
-                        .map((user, index) => (
-                            <Tr key={user.id}>
-                                <Td>{currentPage * 10 + index + 1}</Td>
-                                <Td>{user.username}</Td>
-                                <Td>{user.contactNumber}</Td>
-                                <Td>{user.TransactionID}</Td>
-                                <Td>{user.validityFrom}</Td>
-                                <Td>{user.validityTo}</Td>
-                                <Td>
-                                    {user.paid ? '✔️' : '❌'}
-                                    <Button onClick={() => handlePaidToggle(user)} ml={2}>
-                                        {user.paid ? 'Unmark Paid' : 'Mark as Paid'}
-                                    </Button>
-                                </Td>
-                                <Td>
-                                    <Button>Hold</Button>
-                                </Td>
-                                                            </Tr>
-                        ))}
-                </Tbody>
-            </Table>
+    <Thead>
+        <Tr>
+            <Th>S.No</Th>
+            <Th>Username</Th>
+            <Th>Mobile No.</Th>
+            <Th>Transaction ID</Th>
+            <Th>Validity From</Th>
+            <Th>Validity To</Th>
+            <Th>Paid</Th>
+            <Th>Review</Th>
+        </Tr>
+    </Thead>
+    <Tbody>
+        {users
+            ?.slice(currentPage * 10, (currentPage + 1) * 10)
+            .map((user, index) => (
+                <Tr key={user.id}>
+                    <Td>{currentPage * 10 + index + 1}</Td>
+                    <Td>{user.username}</Td>
+                    <Td>{user.contactNumber}</Td>
+                    <Td>{user.TransactionID}</Td>
+                    <Td>
+  {user.validFrom && moment(user.validFrom.toDate()).format('DD-MM-YYYY')}
+</Td>
+<Td>
+  {user.validTill && moment(user.validTill.toDate()).format('DD-MM-YYYY')}
+</Td>
+                    <Td>
+                        {user.paid ? '✔️' : '❌'}
+                        <Button onClick={() => handlePaidToggle(user)} ml={2}>
+                            {user.paid ? 'Unmark Paid' : 'Mark as Paid'}
+                        </Button>
+                    </Td>
+                    <Td>
+                        <Button>Hold</Button>
+                    </Td>
+                </Tr>
+            ))}
+    </Tbody>
+</Table>
+
             <ReactPaginate
                 previousLabel={'previous'}
                 nextLabel={'next'}
