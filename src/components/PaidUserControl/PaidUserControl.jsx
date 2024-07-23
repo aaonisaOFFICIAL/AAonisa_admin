@@ -16,14 +16,9 @@ const PaidUserControl = () => {
     const [validTill, setValidTill] = useState('');
     const [pageCount, setPageCount] = useState(0);
     const [currentPage, setCurrentPage] = useState(0);
-    const [filter, setFilter] = useState('all');
-    const [selectedUser, setSelectedUser] = useState(null);
 
     const fetchUsers = useCallback(async () => {
-        let q = query(collection(db, "users"));
-        if (search) {
-            q = query(collection(db, "users"), where("contactNumber", "==", search));
-        }
+        let q = query(collection(db, "users"), where("TransactionID", "!=", ""));
         const querySnapshot = await getDocs(q);
         let usersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
@@ -38,20 +33,47 @@ const PaidUserControl = () => {
 
         setUsers(usersData);
         setPageCount(Math.ceil(usersData.length / 10));
-    }, [search, validTill]);
+    }, [validTill]);
 
     useEffect(() => {
         fetchUsers();
     }, [fetchUsers, currentPage]);
 
-    useEffect(() => {
-        const filteredUsers = filter === 'paid' ? users.filter(user => user.paid) : users;
-        setPageCount(Math.ceil(filteredUsers.length / 10));
-    }, [users, filter]);
-
     const handlePageClick = (event) => {
         setCurrentPage(event.selected);
     };
+
+    const handleAddUserToPaidList = useCallback(async (mobileNumber) => {
+        const q = query(collection(db, "users"), where("contactNumber", "==", mobileNumber));
+        const querySnapshot = await getDocs(q);
+        
+        if (!querySnapshot.empty) {
+            const userDoc = querySnapshot.docs[0];
+            const userRef = doc(db, "users", userDoc.id);
+
+            await updateDoc(userRef, {
+                paid: true,
+                TransactionID: "*************"
+            });
+
+            toast.success(`User has been added to the paid list.`, {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            });
+            fetchUsers();
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: `User with mobile number ${mobileNumber} not found.`,
+            });
+        }
+    }, [fetchUsers]);
 
     const handlePaidChange = useCallback(async (user) => {
         const userRef = doc(db, "users", user.id);
@@ -99,14 +121,13 @@ const PaidUserControl = () => {
                     onChange={(e) => setSearch(e.target.value)}
                     mr={2}
                 />
+                <Button onClick={() => handleAddUserToPaidList(search)}>Add to Paid List</Button>
                 <Input
                     placeholder="Valid Till (MM-YYYY)"
                     value={validTill}
                     onChange={(e) => setValidTill(e.target.value)}
-                    mr={2}
+                    ml={2}
                 />
-                <Button onClick={() => setFilter('paid')} mr={2}>Paid</Button>
-                <Button onClick={() => setFilter('all')}>All</Button>
             </Box>
             <Table variant="simple">
                 <Thead>
@@ -114,6 +135,7 @@ const PaidUserControl = () => {
                         <Th>S.No</Th>
                         <Th>Username</Th>
                         <Th>Mobile No.</Th>
+                        <Th>Transaction ID</Th>
                         <Th>Validity From</Th>
                         <Th>Validity To</Th>
                         <Th>Paid</Th>
@@ -124,26 +146,24 @@ const PaidUserControl = () => {
                 <Tbody>
                     {users
                         ?.slice(currentPage * 10, (currentPage + 1) * 10)
-                        .filter(user => (filter === 'paid' ? user.paid : true))
                         .map((user, index) => (
                             <Tr key={user.id}>
                                 <Td>{currentPage * 10 + index + 1}</Td>
                                 <Td>{user.username}</Td>
                                 <Td>{user.contactNumber}</Td>
+                                <Td>{user.TransactionID}</Td>
                                 <Td>{user.validityFrom}</Td>
                                 <Td>{user.validityTo}</Td>
                                 <Td>
-    {user.paid ? '✔️' : '❌'}
-    <Button onClick={() => handlePaidToggle(user)}>
-        {user.paid ? 'Unmark Paid' : 'Mark as Paid'}
-    </Button>
-</Td>
+                                    {user.paid ? '✔️' : '❌'}
+                                    <Button onClick={() => handlePaidToggle(user)}>
+                                        {user.paid ? 'Unmark Paid' : 'Mark as Paid'}
+                                    </Button>
+                                </Td>
                                 <Td>
                                     <Button>Hold</Button>
                                 </Td>
-                                <Td>
-                                    <Button>🗑</Button>
-                                </Td>
+                                
                             </Tr>
                         ))}
                 </Tbody>

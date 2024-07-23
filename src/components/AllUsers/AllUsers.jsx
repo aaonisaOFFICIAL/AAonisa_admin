@@ -8,6 +8,9 @@ const AllUsers = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
+
+
+  console.log(users,"---------------->")
   useEffect(() => {
     const fetchUsersAndPosts = async () => {
       try {
