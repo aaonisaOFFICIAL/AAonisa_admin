@@ -140,7 +140,7 @@ const PaidUserControl = () => {
                         <Th>Validity To</Th>
                         <Th>Paid</Th>
                         <Th>Review</Th>
-                        <Th>Remove</Th>
+                    
                     </Tr>
                 </Thead>
                 <Tbody>
