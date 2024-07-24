@@ -21,6 +21,8 @@ const PaidUserControl = () => {
     const [showPaidUsers, setShowPaidUsers] = useState(false);
     const [sortBy, setSortBy] = useState(''); // Track sorting state
     const [sortOrder, setSortOrder] = useState('asc'); // Track sorting order
+    const [mobileSearch, setMobileSearch] = useState('');
+
 
     const fetchUsers = useCallback(async () => {
         let q = query(
@@ -35,7 +37,10 @@ const PaidUserControl = () => {
         } else if (transactionSearch) {
             q = query(collection(db, "users"), where("TransactionID", "==", transactionSearch));
         }
-        
+        if (mobileSearch) {
+            q = query(collection(db, "users"), where("contactNumber", "==", mobileSearch), where("TransactionID", "!=", ""));
+        }
+    
         const querySnapshot = await getDocs(q);
         let usersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         console.log('usersData:', usersData);
@@ -75,13 +80,13 @@ const PaidUserControl = () => {
             });
         }
 
-        setUsers(usersData.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))); // Latest added on top
+        setUsers(usersData?.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))); // Latest added on top
         setPageCount(Math.ceil(usersData.length / 10));
-    }, [validTill, showPaidUsers, transactionSearch, sortBy, sortOrder]);
+    }, [validTill, showPaidUsers, transactionSearch, mobileSearch,sortBy, sortOrder]);
 
     useEffect(() => {
         fetchUsers();
-    }, [fetchUsers, currentPage]);
+    }, [fetchUsers, currentPage,mobileSearch]);
 
     const handlePageClick = (event) => {
         setCurrentPage(event.selected);
@@ -232,6 +237,14 @@ const PaidUserControl = () => {
     return (
         <Box p={4} m={16}>
             <Grid templateColumns="repeat(6, 1fr)" gap={2} mb={4}>
+            <GridItem colSpan={{ base: 6, md: 1 }}>
+    <Input
+        placeholder="Search by Mobile Number (With Transaction ID)"
+        value={mobileSearch}
+        onChange={(e) => setMobileSearch(e.target.value)}
+    />
+</GridItem>
+
                 <GridItem colSpan={{ base: 6, md: 2 }}>
                     <Input
                         placeholder="Mobile Number"
@@ -256,12 +269,12 @@ const PaidUserControl = () => {
                         onChange={(e) => setTransactionSearch(e.target.value)}
                     />
                 </GridItem>
-                <GridItem colSpan={{ base: 6, md: 1 }}>
+                {/* <GridItem colSpan={{ base: 6, md: 1 }}>
                     <Button width="100%" onClick={() => setShowPaidUsers(true)}>Show Paid Users</Button>
                 </GridItem>
                 <GridItem colSpan={{ base: 6, md: 1 }}>
                     <Button width="100%" onClick={() => setShowPaidUsers(false)}>Show All Users</Button>
-                </GridItem>
+                </GridItem> */}
             </Grid>
             <Table variant="simple">
                 <Thead>
