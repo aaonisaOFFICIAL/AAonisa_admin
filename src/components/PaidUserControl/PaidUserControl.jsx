@@ -46,13 +46,13 @@ const PaidUserControl = () => {
         });
 
         if (validTill) {
+            const [month, year] = validTill.split('-');
             usersData = usersData.filter(user => {
-                if (!user.validityTo) return false;
-                const [month, year] = validTill.split('-');
-                const [validMonth, validYear] = user.validityTo.split('-');
-                return validYear >= year && (validYear > year || validMonth >= month);
+              if (!user.validTill) return false;
+              const userValidTillDate = user.validTill.toDate();
+              return userValidTillDate.getFullYear() === parseInt(year) && userValidTillDate.getMonth() + 1 === parseInt(month);
             });
-        }
+          }
 
         setUsers(usersData.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))); // Latest added on top
         setPageCount(Math.ceil(usersData.length / 10));
