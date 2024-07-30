@@ -4,7 +4,7 @@ import { Box, Table as ChakraTable, Thead, Tbody, Tr, Th, Td, Input, HStack } fr
 import { FaSort, FaSortUp, FaSortDown } from 'react-icons/fa';
 import ReactPaginate from 'react-paginate';
 
-const UserTable = ({ data, handlePaidChange }) => {
+const UserTable = ({ data, handlePaidChange, pagination, setPagination }) => {
   const columns = React.useMemo(
     () => [
       { Header: 'Plan (Free/Paid)', accessor: 'plan' },
@@ -46,10 +46,18 @@ const UserTable = ({ data, handlePaidChange }) => {
     setPageSize,
     state: { pageIndex, pageSize }
   } = useTable(
-    { columns, data, initialState: { pageIndex: 0 } },
+    {
+      columns,
+      data,
+      initialState: { pageIndex: pagination.pageIndex, pageSize: pagination.pageSize }
+    },
     useSortBy,
     usePagination
   );
+
+  React.useEffect(() => {
+    setPagination({ pageIndex, pageSize });
+  }, [pageIndex, pageSize, setPagination]);
 
   const renderSortIcon = (column) => {
     if (!column.isSorted) return <FaSort />;
@@ -86,7 +94,7 @@ const UserTable = ({ data, handlePaidChange }) => {
           })}
         </Tbody>
       </ChakraTable>
-      
+
       <Box mt={4}>
         <ReactPaginate
           previousLabel={'Previous'}

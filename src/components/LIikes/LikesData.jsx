@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { db } from 'Config'; // Adjust the import according to your file structure
+import { db } from 'Config';
 import { collection, getDocs, updateDoc, doc } from 'firebase/firestore';
 import { Box, Input, Button, VStack, Heading, Spinner } from '@chakra-ui/react';
 import Swal from 'sweetalert2';
-import Table from './Table'; // Adjust the import according to your file structure
+import Table from './Table';
 
 const LikesData = () => {
   const [data, setData] = useState([]);
-  const [search, setSearch] = useState('');
   const [originalData, setOriginalData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [search, setSearch] = useState('');
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
 
   const fetchData = async () => {
     try {
@@ -25,11 +26,11 @@ const LikesData = () => {
       const mergedData = usersData.map(user => {
         const userVideos = videosData.filter(video => video.uid === user.uid);
         const likes = userVideos.reduce((total, video) => total + (video.likes ? video.likes.length : 0), 0);
-        const amount = Math.floor(likes / 100); // Amount in Rs. (100 likes = 1 Rs.)
+        const amount = Math.floor(likes / 100);
         const dislikes = userVideos.reduce((total, video) => total + (video.dislikes ? video.dislikes.length : 0), 0);
         const balanceAmount = amount - (user.paidDone || 0);
 
-        return { ...user, likes, dislikes, amount, balanceAmount ,paidDone: user.paidDone || 0,};
+        return { ...user, likes, dislikes, amount, balanceAmount, paidDone: user.paidDone || 0 };
       });
 
       setData(mergedData);
@@ -86,7 +87,7 @@ const LikesData = () => {
   }, [search, originalData]);
 
   const handleSearch = () => {
-    const filteredData = data.filter(user => user?.contactNumber?.includes(search));
+    const filteredData = originalData.filter(user => user?.contactNumber?.includes(search));
     setData(filteredData);
   };
 
@@ -106,7 +107,12 @@ const LikesData = () => {
           />
           <Button mt={2} onClick={handleSearch}>Search</Button>
         </Box>
-        <Table data={data} handlePaidChange={handlePaidChange} />
+        <Table
+          data={data}
+          handlePaidChange={handlePaidChange}
+          pagination={pagination}
+          setPagination={setPagination}
+        />
       </VStack>
     </Box>
   );
