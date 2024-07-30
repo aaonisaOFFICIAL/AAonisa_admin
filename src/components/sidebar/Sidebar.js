@@ -26,6 +26,7 @@ import PropTypes from "prop-types";
 import { IoMenuOutline } from "react-icons/io5";
 
 function Sidebar(props) {
+  
   const { routes } = props;
 
   let variantChange = "0.2s linear";
