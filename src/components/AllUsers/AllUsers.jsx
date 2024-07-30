@@ -68,7 +68,7 @@ const AllUsers = () => {
     if (!user) return {}; // or some default value
     return {
       username: user?.username,
-      MobileNumber: user?.contactNumber,
+      MobileNumber: user?.mobileNumber, //updated contactNumber to mobile number 
       Email: user?.email,
       Followers: user?.followers ? user.followers.length : 0,
       Following: user?.following ? user.following.length : 0,

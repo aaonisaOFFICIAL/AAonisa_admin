@@ -36,7 +36,7 @@ const PaymentDetails = () => {
   const columns = useMemo(() => [
     { Header: 'S.No', accessor: 'sno', Cell: ({ row }) => row.index + 1 },
     { Header: 'Username', accessor: 'username' },
-   { Header: 'Mobile Number', accessor: 'contactNumber' },
+   { Header: 'Mobile Number', accessor: 'mobileNumber' },    // contactNumber to mobileNumber
     { Header: 'Rank', accessor: 'rank' },
     { Header: 'Plan', accessor: 'plan' },
     { Header: 'No. of Followers', accessor: 'followers', sortType: 'basic' },

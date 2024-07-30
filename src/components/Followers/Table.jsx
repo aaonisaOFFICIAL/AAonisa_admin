@@ -9,7 +9,7 @@ const UserTable = ({ data, onPaidChange, pageIndex, setPageIndex }) => {
     () => [
       { Header: 'Plan (Free/Paid)', accessor: 'plan' },
       { Header: 'Username', accessor: 'username' },
-      { Header: 'Mobile Number', accessor: 'contactNumber' },
+      { Header: 'Mobile Number', accessor: 'mobileNumber' },       // contactNumber to mobileNumber
       { Header: 'Total No. of Followers', accessor: 'totalFollowers' },
       { Header: 'Amount (in Rs.)', accessor: 'amount' },
       {

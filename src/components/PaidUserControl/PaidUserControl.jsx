@@ -38,7 +38,7 @@ const PaidUserControl = () => {
             q = query(collection(db, "users"), where("TransactionID", "==", transactionSearch));
         }
         if (mobileSearch) {
-            q = query(collection(db, "users"), where("contactNumber", "==", mobileSearch), where("TransactionID", "!=", ""));
+            q = query(collection(db, "users"), where("mobileNumber", "==", mobileSearch), where("TransactionID", "!=", ""));   // contactNumber to mobileNumber
         }
     
         const querySnapshot = await getDocs(q);
@@ -102,7 +102,7 @@ const PaidUserControl = () => {
             return;
         }
       
-        const q = query(collection(db, "users"), where("contactNumber", "==", mobileNumber));
+        const q = query(collection(db, "users"), where("contactNumber", "==", mobileNumber));   // contactNumber to mobileNumber
         const querySnapshot = await getDocs(q);
         
         if (!querySnapshot.empty) {
@@ -305,7 +305,7 @@ const PaidUserControl = () => {
                             <Tr key={user.id}>
                                 <Td>{currentPage * 10 + index + 1}</Td>
                                 <Td>{user.username}</Td>
-                                <Td>{user.contactNumber}</Td>
+                                <Td>{user.mobileNumber}</Td>   // contactNumber to mobileNumber
                                 <Td>{user.TransactionID}</Td>
                                 <Td>
                                     {user.validFrom && moment(user.validFrom.toDate()).format('DD-MM-YYYY')}

@@ -54,7 +54,7 @@ const UserReport = () => {
         {report.reverse().map((data) => (
           <Tr>
             <Td>{data.uid}</Td>
-            <Td>{data.contactNumber}</Td>
+            <Td>{data.mobileNumber}</Td>   // contactNumber to mobileNumber
             <Td>{data.email}</Td>
             <Td>{data.plan}</Td>
             <Td>{data.report}</Td>
