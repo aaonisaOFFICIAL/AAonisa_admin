@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { db } from 'Config'; // Adjust the import according to your file structure
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, updateDoc, doc } from 'firebase/firestore';
 import { Box, Input, Button, VStack, Heading, Spinner } from '@chakra-ui/react';
+import Swal from 'sweetalert2';
 import Table from './Table'; // Adjust the import according to your file structure
 
 const FollowerData = () => {
@@ -10,6 +11,7 @@ const FollowerData = () => {
   const [originalData, setOriginalData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [pageIndex, setPageIndex] = useState(0); // State for pagination
 
   const fetchData = async () => {
     try {
@@ -25,19 +27,20 @@ const FollowerData = () => {
 
       // Merge users and videos data
       const mergedData = usersData.map(user => {
-        // Calculate total followers from the user data
         const totalFollowers = user.followers ? user.followers.length : 0;
         const amount = Math.floor(totalFollowers / 2); // Amount in Rs. (2 followers = 1 Rs.)
-  
-        // Calculate dislikes from videos
+
         const userVideos = videosData.filter(video => video.uid === user.uid);
         const dislikes = userVideos.reduce((total, video) => total + (video.dislikes ? video.dislikes.length : 0), 0);
-  
+
         return {
           ...user,
           totalFollowers,
           amount,
-          dislikes
+          dislikes,
+          paidDone: user.paidDone || 0, // Default value
+          balanceAmount: user.paidDone ? amount - user.paidDone : amount, // Default value
+          processingAmount: user.processingAmount || 0, // Default value
         };
       });
 
@@ -66,6 +69,28 @@ const FollowerData = () => {
     setData(filteredData);
   };
 
+  const handlePaidChange = async (id, newPaidDone) => {
+    const user = data.find(user => user.id === id);
+
+    if (newPaidDone > user.amount) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Invalid Input',
+        text: 'Paid Done cannot be greater than Amount.',
+      });
+      return;
+    }
+
+    const updatedData = data.map(user =>
+      user.id === id ? { ...user, paidDone: newPaidDone, balanceAmount: user.amount - newPaidDone } : user
+    );
+    setData(updatedData);
+
+    // Update in Firebase
+    const userRef = doc(db, 'users', id);
+    await updateDoc(userRef, { paidDone: newPaidDone, balanceAmount: user.amount - newPaidDone });
+  };
+
   if (loading) return <Spinner size="xl" />;
   if (error) return <Box>Error: {error}</Box>;
 
@@ -82,7 +107,12 @@ const FollowerData = () => {
           />
           <Button mt={2} onClick={handleSearch}>Search</Button>
         </Box>
-        <Table data={data} />
+        <Table
+          data={data}
+          onPaidChange={handlePaidChange}
+          pageIndex={pageIndex}
+          setPageIndex={setPageIndex}
+        />
       </VStack>
     </Box>
   );

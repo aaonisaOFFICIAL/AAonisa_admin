@@ -1,23 +1,38 @@
 import React from 'react';
 import { useTable, useSortBy, usePagination } from 'react-table';
-import { Box, Table as ChakraTable, Thead, Tbody, Tr, Th, Td, HStack } from '@chakra-ui/react';
+import { Box, Table as ChakraTable, Thead, Tbody, Tr, Th, Td, HStack, Input } from '@chakra-ui/react';
 import { FaSort, FaSortUp, FaSortDown } from 'react-icons/fa';
 import ReactPaginate from 'react-paginate';
 
-const UserTable = ({ data }) => {
+const UserTable = ({ data, onPaidChange, pageIndex, setPageIndex }) => {
   const columns = React.useMemo(
     () => [
       { Header: 'Plan (Free/Paid)', accessor: 'plan' },
       { Header: 'Username', accessor: 'username' },
       { Header: 'Mobile Number', accessor: 'contactNumber' },
-      { Header: 'Total No. of Followers', accessor: 'followers.length' },
+      { Header: 'Total No. of Followers', accessor: 'totalFollowers' },
       { Header: 'Amount (in Rs.)', accessor: 'amount' },
-      { Header: 'Paid Done', accessor: 'paidDone' },
-      { Header: 'Balance Amount', accessor: row => row.amount - row.paidDone },
+      {
+        Header: 'Paid Done',
+        accessor: 'paidDone',
+        Cell: ({ row }) => {
+          const { id, amount, paidDone } = row.original;
+          return (
+            <Input
+              type="number"
+              value={paidDone}
+              onChange={(e) => onPaidChange(id, Number(e.target.value))}
+              min="0"
+              max={amount}
+            />
+          );
+        },
+      },
+      { Header: 'Balance Amount', accessor: 'balanceAmount' },
       { Header: 'Processing Amount', accessor: 'processingAmount' },
       { Header: 'Paid Amount Details', accessor: 'paidAmountDetails' }
     ],
-    []
+    [onPaidChange]
   );
 
   const {
@@ -33,9 +48,9 @@ const UserTable = ({ data }) => {
     nextPage,
     previousPage,
     setPageSize,
-    state: { pageIndex, pageSize }
+    state: { pageSize }
   } = useTable(
-    { columns, data, initialState: { pageIndex: 0 } },
+    { columns, data, initialState: { pageIndex } },
     useSortBy,
     usePagination
   );
@@ -85,7 +100,10 @@ const UserTable = ({ data }) => {
           pageCount={pageOptions.length}
           marginPagesDisplayed={2}
           pageRangeDisplayed={5}
-          onPageChange={({ selected }) => gotoPage(selected)}
+          onPageChange={({ selected }) => {
+            setPageIndex(selected);
+            gotoPage(selected);
+          }}
           containerClassName={'pagination'}
           activeClassName={'active'}
           initialPage={pageIndex}
