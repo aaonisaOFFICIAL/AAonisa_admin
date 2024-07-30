@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useTable, useSortBy, usePagination } from 'react-table';
-import { Box, Table, Thead, Tbody, Tr, Th, Td, Button, HStack } from '@chakra-ui/react';
+import { Box, Table as ChakraTable, Thead, Tbody, Tr, Th, Td, Input, HStack } from '@chakra-ui/react';
 import { FaSort, FaSortUp, FaSortDown } from 'react-icons/fa';
 import ReactPaginate from 'react-paginate';
 
-const UserTable = ({ data }) => {
+const UserTable = ({ data, handlePaidChange }) => {
   const columns = React.useMemo(
     () => [
       { Header: 'Plan (Free/Paid)', accessor: 'plan' },
@@ -13,12 +13,22 @@ const UserTable = ({ data }) => {
       { Header: 'Total No. of Likes', accessor: 'likes' },
       { Header: 'Dislikes', accessor: 'dislikes' },
       { Header: 'Amount (in Rs.)', accessor: 'amount' },
-      { Header: 'Paid Done', accessor: 'paidDone' },
+      {
+        Header: 'Paid Done',
+        accessor: 'paidDone',
+        Cell: ({ value, row }) => (
+          <Input
+            type="number"
+            defaultValue={value}
+            onBlur={(e) => handlePaidChange(row.original.id, Number(e.target.value))}
+          />
+        ),
+      },
       { Header: 'Balance Amount', accessor: 'balanceAmount' },
       { Header: 'Processing Amount', accessor: 'processingAmount' },
       { Header: 'Paid Amount Details', accessor: 'paidAmountDetails' }
     ],
-    []
+    [handlePaidChange]
   );
 
   const {
@@ -48,7 +58,7 @@ const UserTable = ({ data }) => {
 
   return (
     <Box overflowX="auto">
-      <Table {...getTableProps()} variant="striped" colorScheme="teal">
+      <ChakraTable {...getTableProps()} variant="striped" colorScheme="teal">
         <Thead>
           {headerGroups.map(headerGroup => (
             <Tr {...headerGroup.getHeaderGroupProps()}>
@@ -75,7 +85,7 @@ const UserTable = ({ data }) => {
             );
           })}
         </Tbody>
-      </Table>
+      </ChakraTable>
       
       <Box mt={4}>
         <ReactPaginate
