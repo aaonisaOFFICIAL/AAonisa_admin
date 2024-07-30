@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useTable, useSortBy, usePagination } from 'react-table';
-import { Box, Table, Thead, Tbody, Tr, Th, Td, Button, HStack } from '@chakra-ui/react';
+import { Box, Table as ChakraTable, Thead, Tbody, Tr, Th, Td, HStack } from '@chakra-ui/react';
 import { FaSort, FaSortUp, FaSortDown } from 'react-icons/fa';
 import ReactPaginate from 'react-paginate';
 
@@ -10,10 +10,10 @@ const UserTable = ({ data }) => {
       { Header: 'Plan (Free/Paid)', accessor: 'plan' },
       { Header: 'Username', accessor: 'username' },
       { Header: 'Mobile Number', accessor: 'contactNumber' },
-      { Header: 'Total No. of Likes', accessor: 'likes' },
+      { Header: 'Total No. of Followers', accessor: 'followers.length' },
       { Header: 'Amount (in Rs.)', accessor: 'amount' },
       { Header: 'Paid Done', accessor: 'paidDone' },
-      { Header: 'Balance Amount', accessor: 'balanceAmount' },
+      { Header: 'Balance Amount', accessor: row => row.amount - row.paidDone },
       { Header: 'Processing Amount', accessor: 'processingAmount' },
       { Header: 'Paid Amount Details', accessor: 'paidAmountDetails' }
     ],
@@ -47,7 +47,7 @@ const UserTable = ({ data }) => {
 
   return (
     <Box overflowX="auto">
-      <Table {...getTableProps()} variant="striped" colorScheme="teal">
+      <ChakraTable {...getTableProps()} variant="striped" colorScheme="teal">
         <Thead>
           {headerGroups.map(headerGroup => (
             <Tr {...headerGroup.getHeaderGroupProps()}>
@@ -74,7 +74,7 @@ const UserTable = ({ data }) => {
             );
           })}
         </Tbody>
-      </Table>
+      </ChakraTable>
       
       <Box mt={4}>
         <ReactPaginate

@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { db } from 'Config'; // Adjust the import according to your file structure
 import { collection, getDocs } from 'firebase/firestore';
-import { Box, Input, Button, VStack, Heading } from '@chakra-ui/react';
+import { Box, Input, Button, VStack, Heading, Spinner } from '@chakra-ui/react';
 import Table from './Table'; // Adjust the import according to your file structure
 
 const FollowerData = () => {
   const [data, setData] = useState([]);
   const [search, setSearch] = useState('');
   const [originalData, setOriginalData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const fetchData = async () => {
     try {
@@ -23,16 +25,29 @@ const FollowerData = () => {
 
       // Merge users and videos data
       const mergedData = usersData.map(user => {
+        // Calculate total followers from the user data
+        const totalFollowers = user.followers ? user.followers.length : 0;
+        const amount = Math.floor(totalFollowers / 2); // Amount in Rs. (2 followers = 1 Rs.)
+  
+        // Calculate dislikes from videos
         const userVideos = videosData.filter(video => video.uid === user.uid);
-        const likes = userVideos.reduce((total, video) => total + (video.likes ? video.likes.length : 0), 0);
         const dislikes = userVideos.reduce((total, video) => total + (video.dislikes ? video.dislikes.length : 0), 0);
-        return { ...user, likes, dislikes };
+  
+        return {
+          ...user,
+          totalFollowers,
+          amount,
+          dislikes
+        };
       });
 
       setData(mergedData);
       setOriginalData(mergedData);
+      setLoading(false);
     } catch (error) {
       console.error("Error fetching data:", error);
+      setError("Failed to load data.");
+      setLoading(false);
     }
   };
 
@@ -50,6 +65,9 @@ const FollowerData = () => {
     const filteredData = originalData.filter(user => user?.contactNumber?.includes(search));
     setData(filteredData);
   };
+
+  if (loading) return <Spinner size="xl" />;
+  if (error) return <Box>Error: {error}</Box>;
 
   return (
     <Box p={4}>
