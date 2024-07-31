@@ -15,9 +15,28 @@ const SalesmanScreen = () => {
   const itemsPerPage = 10;
 
   const fetchData = async () => {
-    const usersCollection = collection(db, 'users'); // Adjust collection name as needed
-    const usersSnapshot = await getDocs(usersCollection);
-    const usersData = usersSnapshot.docs.map(doc => doc.data());
+    // Step 1: Fetch uids from referralCode collection
+    const referralCodeCollection = collection(db, 'referralCode');
+    const referralSnapshot = await getDocs(referralCodeCollection);
+    const referralData = referralSnapshot.docs.map(doc => doc.data());
+    const userUids = referralData.map(ref => ref.uid);
+
+    // Step 2: Fetch users using the uids from referralCode collection
+    if (userUids.length === 0) {
+      setData([]);
+      setOriginalData([]);
+      return;
+    }
+
+    const usersCollection = collection(db, 'users');
+    const usersQuery = query(usersCollection, where('uid', 'in', userUids));
+    const usersSnapshot = await getDocs(usersQuery);
+    const usersData = usersSnapshot.docs.map(doc => {
+      const userData = doc.data();
+      const referralInfo = referralData.find(ref => ref.uid === userData.uid);
+      return { ...userData, referCode: referralInfo.code };
+    });
+
     setData(usersData);
     setOriginalData(usersData);
   };
@@ -26,6 +45,7 @@ const SalesmanScreen = () => {
     fetchData();
   }, []);
 
+
   const handleSearch = async () => {
     if (!referId) {
       setData(originalData);
@@ -33,10 +53,36 @@ const SalesmanScreen = () => {
       setFreeUsers(0);
       return;
     }
+
+    const referralCodeCollection = collection(db, 'referralCode');
+    const referQuery = query(referralCodeCollection, where('code', '==', referId));
+    const referSnapshot = await getDocs(referQuery);
+
+    if (referSnapshot.empty) {
+      setData([]);
+      setPaidUsers(0);
+      setFreeUsers(0);
+      return;
+    }
+
+    const referralData = referSnapshot.docs.map(doc => doc.data());
+    const userUids = referralData.map(ref => ref.uid);
+
+    if (userUids.length === 0) {
+      setData([]);
+      setPaidUsers(0);
+      setFreeUsers(0);
+      return;
+    }
+
     const usersCollection = collection(db, 'users');
-    const referQuery = query(usersCollection, where('referId', '==', referId));
-    const usersSnapshot = await getDocs(referQuery);
-    const usersData = usersSnapshot.docs.map(doc => doc.data());
+    const usersQuery = query(usersCollection, where('uid', 'in', userUids));
+    const usersSnapshot = await getDocs(usersQuery);
+    const usersData = usersSnapshot.docs.map(doc => {
+      const userData = doc.data();
+      const referralInfo = referralData.find(ref => ref.uid === userData.uid);
+      return { ...userData, referCode: referralInfo.code };
+    });
 
     setPaidUsers(usersData.filter(user => user.plan === 'Paid').length);
     setFreeUsers(usersData.filter(user => user.plan === 'Free').length);
@@ -49,8 +95,8 @@ const SalesmanScreen = () => {
     () => [
       { Header: 'S.No', accessor: 'sno', Cell: ({ row }) => row.index + 1 },
       { Header: 'Username', accessor: 'username' },
-      { Header: 'refer id', accessor: 'userdfname' },
-      { Header: 'Mobile No.', accessor: 'mobileNumber' },    // contactNumber to mobileNumber
+      { Header: 'Refer Code', accessor: 'referCode' },
+      { Header: 'Mobile No.', accessor: 'mobileNumber' }, // contactNumber to mobileNumber
       { Header: 'Plan (Free/Paid)', accessor: 'plan' },
     ],
     []
@@ -76,7 +122,7 @@ const SalesmanScreen = () => {
       <VStack spacing={4} align="stretch">
         <Box>
           <Input
-            placeholder="Search by Refer ID"
+            placeholder="Search by Refer Code"
             value={referId}
             onChange={(e) => setReferId(e.target.value)}
             onKeyUp={(e) => {

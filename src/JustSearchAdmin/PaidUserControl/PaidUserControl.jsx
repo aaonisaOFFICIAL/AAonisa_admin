@@ -3,7 +3,7 @@ import {
     Box, Button, Input, Table, Thead, Tbody, Tr, Th, Td, Grid, GridItem
 } from '@chakra-ui/react';
 import { collection, query, where, getDocs, doc, updateDoc, getDoc, Timestamp, orderBy } from "firebase/firestore";
-import { db } from 'Config';
+import { JSdb } from "JSConfig";
 import ReactPaginate from 'react-paginate';
 import Swal from 'sweetalert2';
 import { ToastContainer, toast } from 'react-toastify';
@@ -11,7 +11,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import './paid.css';
 import moment from 'moment';
 
-const PaidUserControl = () => {
+const PaidUserControlJS = () => {
     const [users, setUsers] = useState([]);
     const [search, setSearch] = useState('');
     const [transactionSearch, setTransactionSearch] = useState('');
@@ -26,24 +26,24 @@ const PaidUserControl = () => {
 
     const fetchUsers = useCallback(async () => {
         let q = query(
-            collection(db, "users"),
+            collection(JSdb, "users"),
             where("TransactionID", "!=", ""),
             orderBy("TransactionDate", "desc")
         );
         
         
         if (showPaidUsers) {
-            q = query(collection(db, "users"), where("paid", "==", true));
+            q = query(collection(JSdb, "users"), where("paid", "==", true));
         } else if (transactionSearch) {
-            q = query(collection(db, "users"), where("TransactionID", "==", transactionSearch));
+            q = query(collection(JSdb, "users"), where("TransactionID", "==", transactionSearch));
         }
         if (mobileSearch) {
-            q = query(collection(db, "users"), where("mobileNumber", "==", mobileSearch), where("TransactionID", "!=", ""));   // contactNumber to mobileNumber
+            q = query(collection(JSdb, "users"), where("phoneNumber", "==", mobileSearch), where("TransactionID", "!=", ""));   // contactNumber to mobileNumber
         }
     
         const querySnapshot = await getDocs(q);
         let usersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        console.log('usersData:', usersData);
+        console.log('usersData2345678:', usersData);
         // Check and update the paid status based on validityTo date
         const today = new Date();
         usersData = usersData.map(user => {
@@ -102,12 +102,12 @@ const PaidUserControl = () => {
             return;
         }
       
-        const q = query(collection(db, "users"), where("mobileNumber", "==", mobileNumber));   // contactNumber to mobileNumber
+        const q = query(collection(JSdb, "users"), where("phoneNumber", "==", mobileNumber));   // contactNumber to mobileNumber
         const querySnapshot = await getDocs(q);
         
         if (!querySnapshot.empty) {
             const userDoc = querySnapshot.docs[0];
-            const userRef = doc(db, "users", userDoc.id);
+            const userRef = doc(JSdb, "users", userDoc.id);
       
             const today = new Date();
             const validFrom = Timestamp.fromDate(new Date(today.getFullYear(), today.getMonth(), today.getDate()))
@@ -141,7 +141,7 @@ const PaidUserControl = () => {
     }, [fetchUsers]);
 
     const handlePaidChange = useCallback(async (user) => {
-        const userRef = doc(db, "users", user.id);
+        const userRef = doc(JSdb, "users", user.id);
         const userDoc = await getDoc(userRef);
         
         if (userDoc.exists()) {
@@ -185,7 +185,7 @@ const PaidUserControl = () => {
     };
 
     const handleHoldChange = useCallback(async (user) => {
-        const userRef = doc(db, "users", user.id);
+        const userRef = doc(JSdb, "users", user.id);
         const userDoc = await getDoc(userRef);
 
         if (userDoc.exists()) {
@@ -305,8 +305,8 @@ const PaidUserControl = () => {
                             <Tr key={user.id}>
                                 <Td>{currentPage * 10 + index + 1}</Td>
                                 <Td>{user.username}</Td>
-                                <Td>{user.mobileNumber}</Td>
-                                   {/* contactNumber to mobileNumber */}
+                                <Td>{user.phoneNumber}</Td> 
+                                  {/* // contactNumber to mobileNumber */}
                                 <Td>{user.TransactionID}</Td>
                                 <Td>
                                     {user.validFrom && moment(user.validFrom.toDate()).format('DD-MM-YYYY')}
@@ -358,4 +358,4 @@ const PaidUserControl = () => {
     );
 };
 
-export default PaidUserControl;
+export default PaidUserControlJS;

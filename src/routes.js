@@ -56,6 +56,7 @@ import MainAnalytics from "JustSearchAdmin/Analytics/MainAnalytics";
 import UserJs from "JustSearchAdmin/Usermanagement/UserJs";
 import MainSetting from "JustSearchAdmin/UserSetting/MainSetting";
 import MainFaqs from "JustSearchAdmin/FAQ/MainFaqs";
+import PaidUserControlJS from "JustSearchAdmin/PaidUserControl/PaidUserControl";
 
 
 
@@ -348,7 +349,13 @@ const routes = user ? [
     path: "/userjs",
     component: UserJs,
   },
-
+  {
+    name: "Paid User Control Just Search",
+    layout: "/admin",
+    icon: <Icon as={TbReportSearch} width='20px' height='20px' color='inherit' />,
+    path: "/paiduserjs",
+    component: PaidUserControlJS,
+  },
   {
     name: "User Setting Just Search",
     layout: "/admin",
