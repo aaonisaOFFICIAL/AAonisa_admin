@@ -57,3 +57,18 @@
     margin: auto;
     margin-top: 30px;
 }
+.pagination {
+    display: flex;
+    justify-content: center;
+    list-style: none;
+    padding: 0;
+}
+
+.pagination li {
+    margin: 0 5px;
+    cursor: pointer;
+}
+
+.pagination li.active {
+    font-weight: bold;
+}
