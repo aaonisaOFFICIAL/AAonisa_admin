@@ -15,7 +15,7 @@ const AllVideos = () => {
   const [hashtag, setHashtag] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [demo, setDemo] = useState([]);
-console.log(reports,"0000000")
+
   const getUsers = async () => {
     try {
       const usersCollection = collection(db, 'users');
@@ -66,7 +66,7 @@ console.log(reports,"0000000")
         return {
           ...video,
           username: video.username,
-          mobileNumber: user.contactNumber || 'N/A',  // contactNumber to mobileNumber
+          mobileNumber: user.mobileNumber || 'N/A',  // contactNumber to mobileNumber
           Followers: video.likes.length,
           Following: video.dislike.length,
           Pic: video.thumbnail,

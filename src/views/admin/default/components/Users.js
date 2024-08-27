@@ -66,7 +66,7 @@ const Users = () => {
             <Tr key={index}>
               <Td>{userData.username}</Td>
               <Td>{userData.password}</Td>
-              <Td>{userData.number}</Td>
+              <Td>{userData.mobileNumber}</Td>
               <Td>{userData.email}</Td>
               <Td>{userData?.followers?.length}</Td>
               <Td>{userData?.following?.length}</Td>

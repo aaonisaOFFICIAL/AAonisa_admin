@@ -28,7 +28,7 @@ const AchieverRankTable = () => {
   ];
 
   const fetchData = async () => {
-    const usersCollection = collection(db, 'achievers'); // Adjust collection name as needed
+    const usersCollection = collection(db, 'users'); // Adjust collection name as needed
     const usersSnapshot = await getDocs(usersCollection);
     const achieversData = usersSnapshot.docs.map(doc => doc.data());
     setData(achieversData);
@@ -55,9 +55,9 @@ const AchieverRankTable = () => {
 
   const columns = useMemo(() => [
     { Header: 'S.No', accessor: (_, rowIndex) => rowIndex + 1 },
-    { Header: 'Mobile No.', accessor: 'mobile' },
+    { Header: 'Mobile No.', accessor: 'mobileNumber' },
     { Header: 'Rank', accessor: 'rank' },
-    { Header: 'No. of Followers', accessor: 'followers', sortType: 'basic' },
+    { Header: 'No. of Followers', accessor: 'followers.length', sortType: 'basic' },
     { Header: 'No. of Reports', accessor: 'reports', sortType: 'basic' },
     { Header: 'Plan', accessor: 'plan' },
     { Header: 'One Time Bonus', accessor: 'oneTimeBonus' },

@@ -11,7 +11,7 @@ const PaymentDetails = () => {
   const [originalData, setOriginalData] = useState([]);
 
   const fetchData = async () => {
-    const usersCollection = collection(db, 'payments'); // Adjust collection name as needed
+    const usersCollection = collection(db, 'users'); // Adjust collection name as needed
     const usersSnapshot = await getDocs(usersCollection);
     const paymentData = usersSnapshot.docs.map(doc => doc.data());
     setData(paymentData);
@@ -39,7 +39,7 @@ const PaymentDetails = () => {
    { Header: 'Mobile Number', accessor: 'mobileNumber' },    // contactNumber to mobileNumber
     { Header: 'Rank', accessor: 'rank' },
     { Header: 'Plan', accessor: 'plan' },
-    { Header: 'No. of Followers', accessor: 'followers', sortType: 'basic' },
+    { Header: 'No. of Followers', accessor: 'followers.length', sortType: 'basic' },
     { Header: 'No. of Likes', accessor: 'likes', sortType: 'basic' },
     { Header: 'Payment Details (Statement)', accessor: 'paymentDetails' },
   ], []);
