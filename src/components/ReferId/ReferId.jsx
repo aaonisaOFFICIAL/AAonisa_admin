@@ -225,7 +225,7 @@ import {
   Td,
 } from '@chakra-ui/react';
 import { db } from 'Config'; // Adjust the import according to your file structure
-import { addDoc, collection, getDocs, query, where, deleteDoc, doc } from 'firebase/firestore';
+import { addDoc, collection, getDocs, query, where, deleteDoc, doc, orderBy } from 'firebase/firestore';
 import ReactPaginate from 'react-paginate';
 import Swal from 'sweetalert2'; // Import SweetAlert2
 
@@ -250,28 +250,29 @@ const ReferId = () => {
   const fetchReferralData = async (refId = '', mobNumber = '') => {
     const collectionRef = collection(db, 'referralCode');
     let q = collectionRef;
-
+  
     if (refId) {
       q = query(q, where('code', '==', refId));
     }
-
+  
     if (mobNumber) {
       q = query(q, where('mobileNumber', '==', mobNumber));
     }
-
+  
+    // Add ordering by createdAt in descending order
+    q = query(q, orderBy('createdAt', 'desc'));
+  
     try {
       const referralSnapshot = await getDocs(q);
       const referralData = await Promise.all(referralSnapshot.docs.map(async (doc) => {
         const referral = { ...doc.data(), id: doc.id };
-        // Fetch the count of users using this referral code
         const userCount = await fetchUserCount(referral.code);
-        // Calculate amount based on the user count
-        const amount = userCount * 1999; 
-        return { ...referral, noOfPaidUsers: userCount, amount }; // Include amount in the returned object
+        const amount = userCount * 1999;
+        return { ...referral, noOfPaidUsers: userCount, amount };
       }));
-
-      console.log('Fetched referral data:', referralData); // Log fetched data
-
+  
+      console.log('Fetched referral data:', referralData);
+  
       setSearchResults(referralData);
       setReferrals(referralData.slice(0, itemsPerPage));
       setCurrentPage(0);
@@ -279,6 +280,7 @@ const ReferId = () => {
       console.error("Error fetching referral data: ", error);
     }
   };
+  
 
   const fetchUserCount = async (referId) => {
     const usersCollection = collection(db, 'users');
@@ -301,41 +303,44 @@ const ReferId = () => {
   };
 
   const handleAdd = async () => {
+    if (!addReferId || !addMobileNumber) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Missing Fields',
+          text: 'Please enter both Refer ID and Mobile Number.',
+        });
+        return;
+      }
     // Validation for mobile number and referral ID
-    if (addMobileNumber.length > 10) {
+    if (addMobileNumber.length !== 10) {
       Swal.fire({
         icon: 'error',
         title: 'Invalid Mobile Number',
-        text: 'Mobile number must not exceed 10 digits.',
+        text: 'Mobile number must  be equall 10 digits.',
       });
       return;
     }
 
-    if (addReferId.length > 12) {
+    if (addReferId.length  !== 12) {
       Swal.fire({
         icon: 'error',
         title: 'Invalid Refer ID',
-        text: 'Refer ID must not exceed 12 characters.',
+        text: 'Refer ID must be equall 12 characters.',
       });
       return;
     }
 
     // Check for empty fields
-    if (!addReferId || !addMobileNumber) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Missing Fields',
-        text: 'Please enter both Refer ID and Mobile Number.',
-      });
-      return;
-    }
+  
 
     const newReferral = {
-      code: addReferId,
-      mobileNumber: addMobileNumber,
-      noOfPaidUsers: 0,
-      amount: 0,
-    };
+        code: addReferId,
+        mobileNumber: addMobileNumber,
+        noOfPaidUsers: 0,
+        amount: 0,
+        createdAt: new Date(), // Add this line to set the current timestamp
+      };
+      
 
     // Fetch the count of users using the new referral code
     newReferral.noOfPaidUsers = await fetchUserCount(newReferral.code);
@@ -344,8 +349,8 @@ const ReferId = () => {
     const docRef = await addDoc(collection(db, 'referralCode'), newReferral);
     newReferral.id = docRef.id;
 
-    setSearchResults([...searchResults, newReferral]);
-    setReferrals([...searchResults.slice(0, itemsPerPage - 1), newReferral]);
+    setSearchResults([newReferral, ...searchResults]);
+    setReferrals([newReferral, ...searchResults.slice(0, itemsPerPage - 1)]);
 
     // Clear the input fields after adding
     setAddReferId('');
@@ -433,13 +438,7 @@ const ReferId = () => {
               <Td>
                 <Input
                   value={referral.code}
-                  onChange={(e) =>
-                    setReferrals(
-                      referrals.map((r, i) =>
-                        i === index ? { ...r, code: e.target.value } : r
-                      )
-                    )
-                  }
+readOnly
                 />
               </Td>
               <Td>{referral.noOfPaidUsers}</Td>
