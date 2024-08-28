@@ -57,6 +57,7 @@ import UserJs from "JustSearchAdmin/Usermanagement/UserJs";
 import MainSetting from "JustSearchAdmin/UserSetting/MainSetting";
 import MainFaqs from "JustSearchAdmin/FAQ/MainFaqs";
 import PaidUserControlJS from "JustSearchAdmin/PaidUserControl/PaidUserControl";
+import ReferId from "components/ReferId/ReferId";
 
 
 
@@ -245,6 +246,8 @@ const routes = user ? [
     path: "/announcement",
     component: Announcement,
   },
+
+  
   {
     name: "Followers",
     layout: "/admin",
@@ -253,6 +256,13 @@ const routes = user ? [
     component: FollowerData,
   },
 
+  {
+    name: "Refer Management",
+    layout: "/admin",
+    icon: <Icon as={TbReportSearch} width='20px' height='20px' color='inherit' />,
+    path: "/refermanagement",
+    component: ReferId,
+  },
   {
     name: "Payment Details",
     layout: "/admin",
