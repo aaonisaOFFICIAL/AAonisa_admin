@@ -143,19 +143,22 @@ const PaidUserControl = () => {
     const handlePaidChange = useCallback(async (user) => {
         const userRef = doc(db, "users", user.id);
         const userDoc = await getDoc(userRef);
-        
+    
         if (userDoc.exists()) {
-            const updatedPaidStatus = !userDoc.data().paid;
+            const isPaid = userDoc.data().paid;
+            const updatedPaidStatus = !isPaid;
+            const updatedPlan = updatedPaidStatus ? "paid" : "free";
             const today = new Date();
             const validFrom = updatedPaidStatus ? Timestamp.fromDate(new Date(today.getFullYear(), today.getMonth(), today.getDate())) : '';
             const validTill = updatedPaidStatus ? Timestamp.fromDate(new Date(today.getFullYear() + 1, today.getMonth(), today.getDate())) : '';
-                
+    
             await updateDoc(userRef, {
                 paid: updatedPaidStatus,
-                validFrom: validFrom,
-                validTill: validTill
+                plan: updatedPlan,
+                validFrom: validFrom || null,
+                validTill: validTill || null
             });
-        
+    
             toast.success(`User payment status has been ${updatedPaidStatus ? 'marked as paid' : 'marked as unpaid'}.`, {
                 position: "top-right",
                 autoClose: 5000,
@@ -168,6 +171,7 @@ const PaidUserControl = () => {
             fetchUsers();
         }
     }, [fetchUsers]);
+    
     
     const handlePaidToggle = (user) => {
         Swal.fire({
