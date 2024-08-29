@@ -4,12 +4,12 @@ import { Box, Table as ChakraTable, Thead, Tbody, Tr, Th, Td, HStack, Input } fr
 import { FaSort, FaSortUp, FaSortDown } from 'react-icons/fa';
 import ReactPaginate from 'react-paginate';
 
-const UserTable = ({ data, onPaidChange, pageIndex, setPageIndex }) => {
+const UserTable = ({ data, onPaidChange, onProcessingAmountChange, pageIndex, setPageIndex }) => {
   const columns = React.useMemo(
     () => [
       { Header: 'Plan (Free/Paid)', accessor: 'plan' },
       { Header: 'Username', accessor: 'username' },
-      { Header: 'Mobile Number', accessor: 'mobileNumber' },       // contactNumber to mobileNumber
+      { Header: 'Mobile Number', accessor: 'mobileNumber' },
       { Header: 'Total No. of Followers', accessor: 'totalFollowers' },
       { Header: 'Amount (in Rs.)', accessor: 'amount' },
       {
@@ -29,11 +29,26 @@ const UserTable = ({ data, onPaidChange, pageIndex, setPageIndex }) => {
         },
       },
       { Header: 'Balance Amount', accessor: 'balanceAmount' },
-      { Header: 'Processing Amount', accessor: 'processingAmount' },
+      {
+        Header: 'Processing Amount',
+        accessor: 'processingAmount',
+        Cell: ({ row }) => {
+          const { id, processingAmount } = row.original;
+          return (
+            <Input
+              type="number"
+              value={processingAmount}
+              onChange={(e) => onProcessingAmountChange(id, Number(e.target.value))}
+              min="0"
+            />
+          );
+        },
+      },
       { Header: 'Paid Amount Details', accessor: 'paidAmountDetails' }
     ],
-    [onPaidChange]
+    [onPaidChange, onProcessingAmountChange]
   );
+
 
   const {
     getTableProps,

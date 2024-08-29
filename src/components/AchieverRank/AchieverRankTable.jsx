@@ -42,7 +42,7 @@ const AchieverRankTable = () => {
   useEffect(() => {
     let filteredData = originalData;
     if (search) {
-      filteredData = filteredData.filter(user => user?.mobile?.includes(search));
+      filteredData = filteredData.filter(user => user?.mobileNumber?.includes(search));
     }
     if (rank) {
       filteredData = filteredData.filter(user => user?.rank === rank.value);

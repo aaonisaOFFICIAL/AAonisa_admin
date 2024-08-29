@@ -94,6 +94,17 @@ const FollowerData = () => {
   if (loading) return <Spinner size="xl" />;
   if (error) return <Box>Error: {error}</Box>;
 
+  const handleProcessingAmountChange = async (id, newProcessingAmount) => {
+    const updatedData = data.map(user =>
+      user.id === id ? { ...user, processingAmount: newProcessingAmount } : user
+    );
+    setData(updatedData);
+  
+    // Update in Firebase
+    const userRef = doc(db, 'users', id);
+    await updateDoc(userRef, { processingAmount: newProcessingAmount });
+  };
+  
   return (
     <Box p={4}>
       <Heading mb={4}>Admin Panel</Heading>
@@ -107,9 +118,10 @@ const FollowerData = () => {
           />
           <Button mt={2} onClick={handleSearch}>Search</Button>
         </Box>
-        <Table
+       <Table
           data={data}
           onPaidChange={handlePaidChange}
+          onProcessingAmountChange={handleProcessingAmountChange} // Pass the handler to UserTable
           pageIndex={pageIndex}
           setPageIndex={setPageIndex}
         />

@@ -29,7 +29,7 @@ const PaymentDetails = () => {
   }, [search, originalData]);
 
   const handleSearch = () => {
-    const filteredData = originalData.filter(user => user?.mobile?.includes(search));
+    const filteredData = originalData.filter(user => user?.mobileNumber?.includes(search));
     setData(filteredData);
   };
 
