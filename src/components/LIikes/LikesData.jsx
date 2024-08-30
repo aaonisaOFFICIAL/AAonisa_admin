@@ -76,11 +76,11 @@ const LikesData = () => {
     }
   };
   const handleProcessingAmountChange = async (id, newValue) => {
-    if (newValue < 0) {
+    if (newValue === undefined || newValue === null || newValue < 0) {
       Swal.fire({
         icon: 'error',
         title: 'Invalid Value',
-        text: 'Processing amount cannot be negative!',
+        text: 'Processing amount cannot be undefined, null, or negative!',
       });
       return;
     }
@@ -99,6 +99,7 @@ const LikesData = () => {
       await updateDoc(userRef, { processingAmount: newValue });
     }
   };
+  
   
 
 
