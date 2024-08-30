@@ -1,10 +1,38 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { useTable, useSortBy, usePagination } from 'react-table';
 import { Box, Table as ChakraTable, Thead, Tbody, Tr, Th, Td, HStack, Input } from '@chakra-ui/react';
 import { FaSort, FaSortUp, FaSortDown } from 'react-icons/fa';
 import ReactPaginate from 'react-paginate';
 
+const debounce = (func, delay) => {
+  let timeoutId;
+  return (...args) => {
+    if (timeoutId) clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => {
+      func(...args);
+    }, delay);
+  };
+};
+
 const UserTable = ({ data, onPaidChange, onProcessingAmountChange, pageIndex, setPageIndex }) => {
+  const [editingPaidDone, setEditingPaidDone] = useState({});
+  const [editingProcessingAmount, setEditingProcessingAmount] = useState({});
+
+  const handlePaidDoneChange = (id, value) => {
+    setEditingPaidDone((prevState) => ({ ...prevState, [id]: value }));
+  };
+
+  const handleProcessingAmountChange = (id, value) => {
+    setEditingProcessingAmount((prevState) => ({ ...prevState, [id]: value }));
+  };
+
+  const debounceApiCall = useCallback(
+    debounce((id, value, apiFunc) => {
+      apiFunc(id, value);
+    }, 500),
+    []
+  );
+
   const columns = React.useMemo(
     () => [
       { Header: 'Plan (Free/Paid)', accessor: 'plan' },
@@ -16,12 +44,19 @@ const UserTable = ({ data, onPaidChange, onProcessingAmountChange, pageIndex, se
         Header: 'Paid Done',
         accessor: 'paidDone',
         Cell: ({ row }) => {
-          const { id, amount, paidDone } = row.original;
+          const { id, amount } = row.original;
+          const localValue = editingPaidDone[id] !== undefined ? editingPaidDone[id] : row.original.paidDone;
+
           return (
             <Input
               type="number"
-              value={paidDone}
-              onChange={(e) => onPaidChange(id, Number(e.target.value))}
+              value={localValue}
+              onClick={(e) => e.stopPropagation()} // Prevent sorting on click
+              onChange={(e) => {
+                handlePaidDoneChange(id, Number(e.target.value));
+                debounceApiCall(id, Number(e.target.value), onPaidChange);
+              }}
+              onBlur={() => onPaidChange(id, localValue)} // Call API when focus is lost
               min="0"
               max={amount}
             />
@@ -33,12 +68,19 @@ const UserTable = ({ data, onPaidChange, onProcessingAmountChange, pageIndex, se
         Header: 'Processing Amount',
         accessor: 'processingAmount',
         Cell: ({ row }) => {
-          const { id, processingAmount } = row.original;
+          const { id } = row.original;
+          const localValue = editingProcessingAmount[id] !== undefined ? editingProcessingAmount[id] : row.original.processingAmount;
+
           return (
             <Input
               type="number"
-              value={processingAmount}
-              onChange={(e) => onProcessingAmountChange(id, Number(e.target.value))}
+              value={localValue}
+              onClick={(e) => e.stopPropagation()} // Prevent sorting on click
+              onChange={(e) => {
+                handleProcessingAmountChange(id, Number(e.target.value));
+                debounceApiCall(id, Number(e.target.value), onProcessingAmountChange);
+              }}
+              onBlur={() => onProcessingAmountChange(id, localValue)} // Call API when focus is lost
               min="0"
             />
           );
@@ -46,9 +88,8 @@ const UserTable = ({ data, onPaidChange, onProcessingAmountChange, pageIndex, se
       },
       { Header: 'Paid Amount Details', accessor: 'paidAmountDetails' }
     ],
-    [onPaidChange, onProcessingAmountChange]
+    [editingPaidDone, editingProcessingAmount, onPaidChange, onProcessingAmountChange]
   );
-
 
   const {
     getTableProps,
@@ -56,16 +97,16 @@ const UserTable = ({ data, onPaidChange, onProcessingAmountChange, pageIndex, se
     headerGroups,
     page,
     prepareRow,
-    canPreviousPage,
-    canNextPage,
-    pageOptions,
+    state: { pageIndex: currentPageIndex, sortBy }, // Access sortBy after initialization
     gotoPage,
-    nextPage,
-    previousPage,
-    setPageSize,
-    state: { pageSize }
+    pageCount,
   } = useTable(
-    { columns, data, initialState: { pageIndex } },
+    {
+      columns,
+      data,
+      initialState: { pageIndex }, // Remove sortBy from initialState
+      autoResetSortBy: false, // Prevent auto reset of sortBy when data changes
+    },
     useSortBy,
     usePagination
   );
@@ -73,6 +114,11 @@ const UserTable = ({ data, onPaidChange, onProcessingAmountChange, pageIndex, se
   const renderSortIcon = (column) => {
     if (!column.isSorted) return <FaSort />;
     return column.isSortedDesc ? <FaSortDown /> : <FaSortUp />;
+  };
+
+  const handlePageChange = ({ selected }) => {
+    setPageIndex(selected);
+    gotoPage(selected);
   };
 
   return (
@@ -112,16 +158,13 @@ const UserTable = ({ data, onPaidChange, onProcessingAmountChange, pageIndex, se
           nextLabel={'Next'}
           breakLabel={'...'}
           breakClassName={'break-me'}
-          pageCount={pageOptions.length}
+          pageCount={pageCount}
           marginPagesDisplayed={2}
           pageRangeDisplayed={5}
-          onPageChange={({ selected }) => {
-            setPageIndex(selected);
-            gotoPage(selected);
-          }}
+          onPageChange={handlePageChange}
           containerClassName={'pagination'}
           activeClassName={'active'}
-          initialPage={pageIndex}
+          initialPage={currentPageIndex}
         />
       </Box>
     </Box>
