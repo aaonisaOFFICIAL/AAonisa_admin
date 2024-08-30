@@ -1,34 +1,102 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { useTable, useSortBy, usePagination } from 'react-table';
-import { Box, Table as ChakraTable, Thead, Tbody, Tr, Th, Td, Input, HStack } from '@chakra-ui/react';
+import { Box, Table as ChakraTable, Thead, Tbody, Tr, Th, Td, HStack, Input } from '@chakra-ui/react';
 import { FaSort, FaSortUp, FaSortDown } from 'react-icons/fa';
 import ReactPaginate from 'react-paginate';
 
-const UserTable = ({ data, handlePaidChange, pagination, setPagination }) => {
+const debounce = (func, delay) => {
+  let timeoutId;
+  return (...args) => {
+    if (timeoutId) clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => {
+      func(...args);
+    }, delay);
+  };
+};
+
+const UserTable = ({ data, handlePaidChange, handleProcessingAmountChange, pagination, setPagination }) => {
+  const [editingPaidDone, setEditingPaidDone] = useState({});
+  const [editingProcessingAmount, setEditingProcessingAmount] = useState({});
+
+  const handlePaidDoneChange = (id, value) => {
+    setEditingPaidDone((prevState) => ({ ...prevState, [id]: value }));
+  };
+
+  const handleProcessingAmountLocalChange = (id, value) => {
+    setEditingProcessingAmount((prevState) => ({ ...prevState, [id]: value }));
+  };
+
+  const debouncePaidDoneApiCall = useCallback(
+    debounce((id, value) => {
+      handlePaidChange(id, value);
+    }, 500),
+    [handlePaidChange]
+  );
+
+  const debounceProcessingAmountApiCall = useCallback(
+    debounce((id, value) => {
+      handleProcessingAmountChange(id, value);
+    }, 500),
+    [handleProcessingAmountChange]
+  );
+  
   const columns = React.useMemo(
     () => [
       { Header: 'Plan (Free/Paid)', accessor: 'plan' },
       { Header: 'Username', accessor: 'username' },
-      { Header: 'Mobile Number', accessor: 'mobileNumber' },  // contactNumber to mobileNumber
+      { Header: 'Mobile Number', accessor: 'mobileNumber' }, // contactNumber to mobileNumber
       { Header: 'Total No. of Likes', accessor: 'likes' },
       { Header: 'Dislikes', accessor: 'dislikes' },
       { Header: 'Amount (in Rs.)', accessor: 'amount' },
       {
         Header: 'Paid Done',
         accessor: 'paidDone',
-        Cell: ({ value, row }) => (
-          <Input
-            type="number"
-            defaultValue={value}
-            onBlur={(e) => handlePaidChange(row.original.id, Number(e.target.value))}
-          />
-        ),
+        Cell: ({ row }) => {
+          const { id, amount } = row.original;
+          const localValue = editingPaidDone[id] !== undefined ? editingPaidDone[id] : row.original.paidDone;
+
+          return (
+            <Input
+              type="number"
+              value={localValue}
+              onClick={(e) => e.stopPropagation()} // Prevent sorting on click
+              onChange={(e) => {
+                handlePaidDoneChange(id, Number(e.target.value));
+                debouncePaidDoneApiCall(id, Number(e.target.value));
+              }}
+              onBlur={() => handlePaidChange(id, localValue)} // Call API when focus is lost
+              min="0"
+              max={amount}
+            />
+          );
+        },
       },
       { Header: 'Balance Amount', accessor: 'balanceAmount' },
-      { Header: 'Processing Amount', accessor: 'processingAmount' },
-      { Header: 'Paid Amount Details', accessor: 'paidAmountDetails' }
+      {
+        Header: 'Processing Amount',
+        accessor: 'processingAmount',
+        Cell: ({ row }) => {
+          const { id } = row.original;
+          const localValue = editingProcessingAmount[id] !== undefined ? editingProcessingAmount[id] : row.original.processingAmount;
+
+          return (
+  <Input
+              type="number"
+              value={localValue}
+              onClick={(e) => e.stopPropagation()} // Prevent sorting on click
+              onChange={(e) => {
+                handleProcessingAmountLocalChange(id, Number(e.target.value));
+                debounceProcessingAmountApiCall(id, Number(e.target.value));
+              }}
+              onBlur={() => handleProcessingAmountChange(id, localValue)} // Call API when focus is lost
+              min="0"
+            />
+          );
+        },
+      },
+      { Header: 'Paid Amount Details', accessor: 'paidAmountDetails' },
     ],
-    [handlePaidChange]
+    [editingPaidDone, editingProcessingAmount, handlePaidChange, handleProcessingAmountChange]
   );
 
   const {
@@ -37,19 +105,16 @@ const UserTable = ({ data, handlePaidChange, pagination, setPagination }) => {
     headerGroups,
     page,
     prepareRow,
-    canPreviousPage,
-    canNextPage,
-    pageOptions,
+    state: { pageIndex, pageSize },
     gotoPage,
-    nextPage,
-    previousPage,
-    setPageSize,
-    state: { pageIndex, pageSize }
+    pageCount,
   } = useTable(
     {
       columns,
       data,
-      initialState: { pageIndex: pagination.pageIndex, pageSize: pagination.pageSize }
+      initialState: { pageIndex: pagination.pageIndex, pageSize: pagination.pageSize },
+      autoResetSortBy: false, // Prevent table from resetting sorting after each change
+      autoResetPage: false, // Prevent table from resetting pagination after each change
     },
     useSortBy,
     usePagination
@@ -63,6 +128,12 @@ const UserTable = ({ data, handlePaidChange, pagination, setPagination }) => {
     if (!column.isSorted) return <FaSort />;
     return column.isSortedDesc ? <FaSortDown /> : <FaSortUp />;
   };
+
+  const handlePageChange = ({ selected }) => {
+    setPagination({ pageIndex: selected, pageSize });
+    gotoPage(selected);
+  };
+
 
   return (
     <Box overflowX="auto">
@@ -101,10 +172,10 @@ const UserTable = ({ data, handlePaidChange, pagination, setPagination }) => {
           nextLabel={'Next'}
           breakLabel={'...'}
           breakClassName={'break-me'}
-          pageCount={pageOptions.length}
+          pageCount={pageCount}
           marginPagesDisplayed={2}
           pageRangeDisplayed={5}
-          onPageChange={({ selected }) => gotoPage(selected)}
+          onPageChange={handlePageChange}
           containerClassName={'pagination'}
           activeClassName={'active'}
           initialPage={pageIndex}

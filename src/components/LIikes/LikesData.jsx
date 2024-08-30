@@ -3,7 +3,7 @@ import { db } from 'Config';
 import { collection, getDocs, updateDoc, doc } from 'firebase/firestore';
 import { Box, Input, Button, VStack, Heading, Spinner } from '@chakra-ui/react';
 import Swal from 'sweetalert2';
-import Table from './Table';
+import Table from './Table'; // Adjust the import according to your file structure
 
 const LikesData = () => {
   const [data, setData] = useState([]);
@@ -75,6 +75,32 @@ const LikesData = () => {
       await updateDoc(userRef, { paidDone: newValue, balanceAmount: user.amount - newValue });
     }
   };
+  const handleProcessingAmountChange = async (id, newValue) => {
+    if (newValue < 0) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Invalid Value',
+        text: 'Processing amount cannot be negative!',
+      });
+      return;
+    }
+  
+    const userIndex = data.findIndex(user => user.id === id);
+    if (userIndex !== -1) {
+      const user = data[userIndex];
+  
+      const updatedUser = { ...user, processingAmount: newValue };
+      const updatedData = [...data];
+      updatedData[userIndex] = updatedUser;
+  
+      setData(updatedData);
+  
+      const userRef = doc(db, 'users', id);
+      await updateDoc(userRef, { processingAmount: newValue });
+    }
+  };
+  
+
 
   useEffect(() => {
     fetchData();
@@ -110,6 +136,7 @@ const LikesData = () => {
         <Table
           data={data}
           handlePaidChange={handlePaidChange}
+          handleProcessingAmountChange={handleProcessingAmountChange} 
           pagination={pagination}
           setPagination={setPagination}
         />
