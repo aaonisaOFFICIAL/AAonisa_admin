@@ -1,14 +1,12 @@
-
 // components/HelpSupportAdmin.js
 import React, { useEffect, useState } from 'react';
-import { Box, Button, FormControl, FormErrorMessage, Input, Table, Thead, Tbody, Tr, Th, Td, VStack } from '@chakra-ui/react';
+import { Box, Table, Thead, Tbody, Tr, Th, Td, VStack } from '@chakra-ui/react';
 import { useForm } from 'react-hook-form';
-import '../HelpandSupport/helpandsupport.css';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { addSupportQuery } from 'service/helpandsupport';
-import { getSupportQueries } from 'service/helpandsupport';
+import { addSupportQuery, getSupportQueries } from 'service/helpandsupport';
 import ReactPaginate from 'react-paginate';
+
 const schema = yup.object().shape({
   topic: yup.string().required('Topic is required'),
   description: yup.string().required('Description is required'),
@@ -17,7 +15,7 @@ const schema = yup.object().shape({
 
 const HelpandSupport = () => {
   const { handleSubmit, register, formState: { errors }, reset } = useForm({
-    resolver: yupResolver(schema)
+    resolver: yupResolver(schema),
   });
 
   const [queries, setQueries] = useState([]);
@@ -27,7 +25,10 @@ const HelpandSupport = () => {
   useEffect(() => {
     const fetchQueries = async () => {
       const data = await getSupportQueries();
-      setQueries(data);
+      // Sort the data by created_at in descending order
+      const sortedData = data.sort((a, b) => b.created_at.toDate() - a.created_at.toDate());
+
+      setQueries(sortedData);
     };
     fetchQueries();
   }, []);
@@ -37,7 +38,8 @@ const HelpandSupport = () => {
       await addSupportQuery(data.topic, data.description, data.uid);
       reset();
       const updatedQueries = await getSupportQueries();
-      setQueries(updatedQueries);
+      const sortedUpdatedQueries = updatedQueries.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      setQueries(sortedUpdatedQueries);
     } catch (error) {
       console.error('Error adding support query:', error);
     }
@@ -52,9 +54,7 @@ const HelpandSupport = () => {
 
   return (
     <Box marginTop="100px">
-   
-
-   <VStack spacing={4} mt={8}>
+      <VStack spacing={4} mt={8}>
         <Table variant="simple">
           <Thead>
             <Tr>
@@ -70,7 +70,7 @@ const HelpandSupport = () => {
                 <Td>{query.topic}</Td>
                 <Td>{query.description}</Td>
                 <Td>{query.uid}</Td>
-                <Td>{new Date(query.created_at.toDate()).toLocaleString()}</Td>
+                <Td>{new Date(query.created_at.toDate()).toLocaleString()}</Td> {/* Ensure the created_at field is displayed correctly */}
               </Tr>
             ))}
           </Tbody>
