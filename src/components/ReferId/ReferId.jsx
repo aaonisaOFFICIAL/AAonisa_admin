@@ -284,7 +284,7 @@ const ReferId = () => {
 
   const fetchUserCount = async (referId) => {
     const usersCollection = collection(db, 'users');
-    const usersQuery = query(usersCollection, where('referId', '==', referId));
+    const usersQuery = query(usersCollection, where('referCode', '==', referId));  // Change 'referId' to 'referCode'
     const usersSnapshot = await getDocs(usersQuery);
     const userCount = usersSnapshot.docs.length; // Get the count of users using this referId
     
