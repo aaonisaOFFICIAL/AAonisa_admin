@@ -54,7 +54,10 @@ const AllUsers = () => {
     { Header: 'S.No', accessor: 'sno', Cell: ({ row }) => row.index + 1 },
     { Header: 'Username', accessor: 'username' },
     { Header: 'Mobile Number', accessor: 'MobileNumber' },
-    { Header: 'Refer by', accessor: 'referby' },
+    {
+      Header: 'Refer by', accessor: 'referCode',
+      Cell: ({ row }) => row.original.Plan === 'paid' ? row.original.referCode : ' ' // Show referCode only if Plan is 'paid'
+    },
     { Header: 'Followers', accessor: 'Followers' },
 
 
@@ -76,6 +79,7 @@ const AllUsers = () => {
       likes: user?.likes,
       views: user?.views,
       totalPosts: user?.totalPosts,
+      referCode:user?.referCode
     };
   });
 
